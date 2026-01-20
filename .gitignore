@@ -1,0 +1,24 @@
+# --- Python environment & cache ---
+__pycache__/
+*.py[cod]
+.venv/
+env/
+venv/
+.env
+
+# --- Distribution / Build ---
+dist/
+build/
+*.egg-info/
+
+# --- IDE specific (VS Code) ---
+.vscode/
+# Note: Keep .vscode/launch.json if you want to share debug configs, 
+# but usually, personal settings should be ignored.
+
+# --- Testing ---
+.pytest_cache/
+results.xml
+results1.xml
+results2.xml    
+
