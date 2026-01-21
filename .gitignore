@@ -5,6 +5,7 @@ __pycache__/
 env/
 venv/
 .env
+data/*.db
 
 # --- Distribution / Build ---
 dist/
