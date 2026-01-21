@@ -6,15 +6,15 @@ A professional-grade financial data pipeline built to analyze volatility and mar
 
 The Stock Risk Engine is a comprehensive financial analytics platform that ingests stock market data, calculates key risk metrics, and provides insights into portfolio volatility and market correlations. The system implements a structured data lake approach ensuring data lineage and mathematical integrity at every layer.
 
-#### 🚀 Getting Started
-```markdown
 ## 🚀 Getting Started
 
-1. **Clone the repo:** `git clone <your-repo-url>`
-2. **Setup Conda:** `conda env create -f environment.yml`
-3. **Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.
-4. **Run Pipeline:** `python main.py` (This builds the Bronze/Silver/Gold layers).
-5. **View Dashboard:** `python src/visualizer.py`
+## 🚀 Getting Started
+
+**1. Clone the repo:** `git clone <your-repo-url>`<br>
+**2. Setup Conda:** `conda env create -f environment.yml`<br>
+**3. Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.<br>
+**4. Run Pipeline:** `python main.py` (This builds the Bronze/Silver/Gold layers).<br>
+**5. View Dashboard:** `python src/visualizer.py`<br>
 
 ## Architecture Overview
 
