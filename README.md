@@ -8,8 +8,6 @@ The Stock Risk Engine is a comprehensive financial analytics platform that inges
 
 ## 🚀 Getting Started
 
-## 🚀 Getting Started
-
 **1. Clone the repo:** `git clone <your-repo-url>`<br>
 **2. Setup Conda:** `conda env create -f environment.yml`<br>
 **3. Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.<br>
