@@ -1,0 +1,21 @@
+# config/tickers.yml
+
+# Primary stocks for risk analysis
+equities:
+  - NVDA  # NVIDIA Corp
+  - TSLA  # Tesla, Inc.
+  - XOM   # Exxon Mobil Corp
+  - CVX   # Chevron Corp
+  - PG    # Procter & Gamble
+
+# Macro indicators for systemic risk & beta calculation
+benchmarks:
+  - ^GSPC  # S&P 500 (Market Proxy)
+  - ^IXIC  # NASDAQ Composite
+
+# Risk & Fear Indicators
+indicators:
+  - ^VIX   # CBOE Volatility Index
+  - ^TNX   # 10-Year Treasury Note Yield
+  - ^IRX   # 13-Week Treasury Bill
+  

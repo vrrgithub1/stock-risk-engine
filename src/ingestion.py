@@ -3,14 +3,19 @@ import pandas as pd
 import sqlite3
 import logging
 from datetime import datetime
+import yaml
+import os
 
 # Setup logging for the ingestion pipeline
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DataIngestor:
-    def __init__(self, db_conn):
-        self.db_conn = db_conn
+    def __init__(self, db_conn=None):
+        if db_conn is None:
+            self.db_conn = sqlite3.connect("data/stock_risk_vault.db")
+        else:
+            self.db_conn = db_conn
 
     def fetch_stock_data(self, tickers, start_date, end_date):
         """
@@ -78,6 +83,45 @@ class DataIngestor:
             cursor.execute(query)
             conn.commit()
         logger.info("Duplicate cleanup complete.")
+
+    def get_tickers_from_config(config_path="config/tickers.yml"):
+        """
+        Reads the tickers.yml file and returns a flat list of all unique symbols.
+        """
+        if not os.path.exists(config_path):
+            # Fallback if the file is missing
+            print(f"Warning: {config_path} not found. using default list.")
+            return ["NVDA", "TSLA", "^GSPC"]
+
+        with open(config_path, "r") as file:
+            config = yaml.safe_load(file)
+        
+        # Extract all symbols from the different categories
+        all_tickers = []
+        for category in config:
+            all_tickers.extend(config[category])
+        
+        # Return unique values only (in case you listed a ticker twice)
+        return list(set(all_tickers))
+    
+    def run_bronze_ingestion(self):
+        """
+        Main function to run the Bronze ingestion pipeline.
+        """
+        tickers = DataIngestor.get_tickers_from_config()
+        start_date = "2010-01-01"
+        end_date = datetime.today().strftime('%Y-%m-%d')
+
+        # Fetch data
+        df = self.fetch_stock_data(tickers, start_date, end_date)
+        if df is not None:
+            # Save to Bronze
+            self.save_to_bronze(df)
+            # Cleanup duplicates
+            self.cleanup_duplicates()
+        else:
+            logger.error("No data fetched; skipping save and cleanup.")
+
 # Example usage for tomorrow:
 # ingestor = DataIngestor(your_sqlite_conn)
 # data = ingestor.fetch_stock_data(['NVDA', 'XOM'], '2024-01-01', '2026-01-19')

@@ -40,20 +40,26 @@ A simulation engine that identifies the "Maximum 5-Day Drawdown" for a custom-we
 
 ```
 stock-risk-engine/
-├── init_project.sh          # Project initialization script
+├── environment.yml         # Conda environment configuration
+├── init_project.sh         # Project initialization script
+├── main.py                 # Main entry point for running the pipeline
 ├── README.md               # Project documentation
 ├── requirements.txt        # Python dependencies
-├── config/                 # Configuration files (empty)
+├── config/
+│   └── tickers.yml         # Configuration for stock tickers
 ├── data/
-│   └── bronze/            # Raw data storage location
-├── docs/                  # Documentation (empty)
+│   └── bronze/             # Raw data storage location
+├── docs/                   # Documentation (empty)
+├── sql/
+│   └── init_analytics_layer.sql  # SQL script for analytics layer
 └── src/
-    ├── __init__.py        # Package initialization
-    ├── database.py        # Database schema creation
-    ├── ingestion.py       # DataIngestor class for fetching and saving data
-    ├── ingest_data.py     # Main ingestion script
-    ├── setup_db.py        # Database setup utilities
-    └── setup_db1.py       # Alternative database setup
+    ├── __init__.py         # Package initialization
+    ├── app_visualizer.py   # Visualization module for risk metrics
+    ├── database.py         # Database schema creation
+    ├── ingestion.py        # DataIngestor class for fetching and saving data
+    ├── maintenance.py      # Maintenance tasks (e.g., archiving)
+    ├── setup_db.py         # Database setup utilities
+    └── setup_db1.py        # Alternative database setup
 ```
 
 ## Installation & Setup
@@ -84,17 +90,17 @@ stock-risk-engine/
 
 4. **Set up the database**
    ```bash
-   python src/database.py
+   python src/setup_db.py
    ```
 
 ## Usage
 
 ### Data Ingestion
 
-Run the data ingestion script to fetch stock data from Yahoo Finance:
+Run the main pipeline script to fetch stock data from Yahoo Finance and process it:
 
 ```bash
-python src/ingest_data.py
+python main.py
 ```
 
 This script will:
@@ -102,13 +108,15 @@ This script will:
 - Fetch macro indicators (^TNX, ^IRX, ^GSPC, ^IXIC, ^VIX)
 - Save data to the bronze layer in SQLite
 - Clean up duplicate entries
+- Build analytical views for silver and gold layers
+- Perform maintenance tasks like archiving old data
 
 ### Custom Data Ingestion
 
-You can modify `src/ingest_data.py` to fetch data for different stocks or date ranges:
+You can modify `main.py` or the ingestion logic in `src/ingestion.py` to fetch data for different stocks or date ranges:
 
 ```python
-from ingestion import DataIngestor
+from src.ingestion import DataIngestor
 import sqlite3
 
 # Connect to database
@@ -152,7 +160,7 @@ ingestor.cleanup_duplicates()
 
 ## Configuration
 
-The project uses configuration files in the `config/` directory. Currently, configuration is minimal and handled programmatically, but this directory is reserved for future YAML-based configuration files.
+The project uses configuration files in the `config/` directory. The `tickers.yml` file contains the list of stock tickers and macro indicators to be ingested. Configuration is handled programmatically, with room for expansion to YAML-based settings.
 
 ## Development
 
