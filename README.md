@@ -8,18 +8,8 @@ The Stock Risk Engine is a comprehensive financial analytics platform that inges
 
 ### Architecture Diagram
 
-![Stock Risk Engine Architecture](docs/Stock_Risk_Engine_Architecture.drawio.png)
-
-
-
-
-## 🚀 Getting Started
-
-**1. Clone the repo:** `git clone <your-repo-url>`<br>
-**2. Setup Conda:** `conda env create -f environment.yml`<br>
-**3. Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.<br>
-**4. Run Pipeline:** `python main.py` (This builds the Bronze/Silver/Gold layers).<br>
-**5. View Dashboard:** `python src/visualizer.py`<br>
+![Stock Risk Engine Architecture](docs/Stock_Risk_Engine_Architecture.png)
+```
 
 ## Architecture Overview
 
@@ -76,6 +66,14 @@ stock-risk-engine/
     ├── setup_db.py         # Database setup utilities
     └── setup_db1.py        # Alternative database setup
 ```
+
+## 🚀 Getting Started
+
+**1. Clone the repo:** `git clone <your-repo-url>`<br>
+**2. Setup Conda:** `conda env create -f environment.yml`<br>
+**3. Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.<br>
+**4. Run Pipeline:** `python main.py` (This builds the Bronze/Silver/Gold layers).<br>
+**5. View Dashboard:** `python src/visualizer.py`<br>
 
 ## Installation & Setup
 
@@ -144,6 +142,40 @@ ingestor.save_to_bronze(data)
 
 # Clean up duplicates
 ingestor.cleanup_duplicates()
+```
+
+### Entity-Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    bronze_price_history {
+        INTEGER id PK
+        TEXT ticker
+        TEXT date
+        REAL open
+        REAL high
+        REAL low
+        REAL close
+        REAL adj_close
+        INTEGER volume
+        TIMESTAMP ingested_at
+    }
+    
+    gold_risk_metrics {
+        TEXT ticker PK
+        TEXT calculation_date PK
+        TEXT metric_type PK
+        INTEGER period_years PK
+        REAL value
+    }
+    
+    silver_clean_returns ||--|| bronze_price_history : "derived from"
+    silver_price_history_clean ||--|| bronze_price_history : "derived from"
+    silver_returns ||--|| silver_price_history_clean : "derived from"
+    silver_rolling_volatility ||--|| silver_returns : "derived from"
+    gold_rolling_beta_30d ||--|| silver_returns : "derived from"
+    gold_max_drawdown ||--|| silver_price_history_clean : "derived from"
+    gold_v_risk_dashboard ||--|| gold_risk_metrics : "derived from"
 ```
 
 ## Data Dictionary
