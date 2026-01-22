@@ -7,9 +7,7 @@ A professional-grade financial data pipeline built to analyze volatility and mar
 The Stock Risk Engine is a comprehensive financial analytics platform that ingests stock market data, calculates key risk metrics, and provides insights into portfolio volatility and market correlations. The system implements a structured data lake approach ensuring data lineage and mathematical integrity at every layer.
 
 ### Architecture Diagram
-```
 ![Stock Risk Engine Architecture](docs/Stock_Risk_Engine_Architecture.png)
-```
 
 ## Architecture Overview
 
