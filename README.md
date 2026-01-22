@@ -56,8 +56,7 @@ stock-risk-engine/
 │       tickers.yml        # Configuration for stock tickers
 │
 ├───data/
-│   │   stock_risk.db      # SQLite database file
-│   │   stock_risk_vault.db # Alternative SQLite database file
+│   │   stock_risk_vault.db # SQLite database file
 │   │
 │   └───bronze/            # Raw data storage location
 │
@@ -74,12 +73,6 @@ stock-risk-engine/
     │   ingestion.py       # DataIngestor class for fetching and saving data
     │   maintenance.py     # Maintenance tasks (e.g., archiving)
     │   setup_db.py        # Database setup utilities
-    │
-    └───__pycache__/       # Python bytecode cache
-            database.cpython-311.pyc
-            ingestion.cpython-311.pyc
-            maintenance.cpython-311.pyc
-            __init__.cpython-311.pyc
 ```
 
 ## 🚀 Getting Started
