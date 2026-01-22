@@ -54,7 +54,8 @@ stock-risk-engine/
 │   └── tickers.yml         # Configuration for stock tickers
 ├── data/
 │   └── bronze/             # Raw data storage location
-├── docs/                   # Documentation (empty)
+├── docs/                   # Documentation and diagrams
+│   └── Stock_Risk_Engine_Architecture.drawio  # Architecture diagram (open in draw.io)
 ├── sql/
 │   └── init_analytics_layer.sql  # SQL script for analytics layer
 └── src/
@@ -63,8 +64,7 @@ stock-risk-engine/
     ├── database.py         # Database schema creation
     ├── ingestion.py        # DataIngestor class for fetching and saving data
     ├── maintenance.py      # Maintenance tasks (e.g., archiving)
-    ├── setup_db.py         # Database setup utilities
-    └── setup_db1.py        # Alternative database setup
+    └── setup_db.py         # Database setup utilities
 ```
 
 ## 🚀 Getting Started
@@ -73,7 +73,7 @@ stock-risk-engine/
 **2. Setup Conda:** `conda env create -f environment.yml`<br>
 **3. Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.<br>
 **4. Run Pipeline:** `python main.py` (This builds the Bronze/Silver/Gold layers).<br>
-**5. View Dashboard:** `python src/visualizer.py`<br>
+**5. View Dashboard:** `python src/app_visualizer.py`<br>
 
 ## Installation & Setup
 
