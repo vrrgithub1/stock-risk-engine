@@ -26,8 +26,9 @@ Calculates the 30-day annualized standard deviation of returns. This helps ident
 
 ### 2. Rolling Market Beta (β)
 Measures the systematic risk of an asset in relation to the S&P 500.
-- β > 1: High sensitivity (Aggressive)
-- β < 1: Low sensitivity (Defensive)
+- β > 1: High sensitivity (Aggressive Growth)
+- β < 1: Low sensitivity (Defensive/Value)
+- β < 0: Inverse correlation (Hedge assets)
 
 ### 3. Historical Stress Testing
 A simulation engine that identifies the "Maximum 5-Day Drawdown" for a custom-weighted portfolio, providing a realistic view of tail risk during historical market shocks.
