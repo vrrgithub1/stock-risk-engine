@@ -7,7 +7,7 @@ A professional-grade financial data pipeline built to analyze volatility and mar
 The Stock Risk Engine is a comprehensive financial analytics platform that ingests stock market data, calculates key risk metrics, and provides insights into portfolio volatility and market correlations. The system implements a structured data lake approach ensuring data lineage and mathematical integrity at every layer.
 
 ### Architecture Diagram
-
+```
 ![Stock Risk Engine Architecture](docs/Stock_Risk_Engine_Architecture.png)
 ```
 
@@ -45,26 +45,41 @@ A simulation engine that identifies the "Maximum 5-Day Drawdown" for a custom-we
 
 ```
 stock-risk-engine/
-├── environment.yml         # Conda environment configuration
-├── init_project.sh         # Project initialization script
-├── main.py                 # Main entry point for running the pipeline
-├── README.md               # Project documentation
-├── requirements.txt        # Python dependencies
-├── config/
-│   └── tickers.yml         # Configuration for stock tickers
-├── data/
-│   └── bronze/             # Raw data storage location
-├── docs/                   # Documentation and diagrams
-│   └── Stock_Risk_Engine_Architecture.drawio  # Architecture diagram (open in draw.io)
-├── sql/
-│   └── init_analytics_layer.sql  # SQL script for analytics layer
-└── src/
-    ├── __init__.py         # Package initialization
-    ├── app_visualizer.py   # Visualization module for risk metrics
-    ├── database.py         # Database schema creation
-    ├── ingestion.py        # DataIngestor class for fetching and saving data
-    ├── maintenance.py      # Maintenance tasks (e.g., archiving)
-    └── setup_db.py         # Database setup utilities
+│   .gitignore
+│   environment.yml         # Conda environment configuration
+│   init_project.sh         # Project initialization script
+│   main.py                 # Main entry point for running the pipeline
+│   README.md               # Project documentation
+│   requirements.txt        # Python dependencies
+│
+├───config/
+│       tickers.yml        # Configuration for stock tickers
+│
+├───data/
+│   │   stock_risk.db      # SQLite database file
+│   │   stock_risk_vault.db # Alternative SQLite database file
+│   │
+│   └───bronze/            # Raw data storage location
+│
+├───docs/
+│       Stock_Risk_Engine_Architecture.png  # Architecture diagram image
+│
+├───sql/
+│       init_analytics_layer.sql  # SQL script for analytics layer
+│
+└───src/
+    │   __init__.py        # Package initialization
+    │   app_visualizer.py  # Visualization module for risk metrics
+    │   database.py        # Database schema creation
+    │   ingestion.py       # DataIngestor class for fetching and saving data
+    │   maintenance.py     # Maintenance tasks (e.g., archiving)
+    │   setup_db.py        # Database setup utilities
+    │
+    └───__pycache__/       # Python bytecode cache
+            database.cpython-311.pyc
+            ingestion.cpython-311.pyc
+            maintenance.cpython-311.pyc
+            __init__.cpython-311.pyc
 ```
 
 ## 🚀 Getting Started
