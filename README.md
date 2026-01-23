@@ -194,13 +194,14 @@ erDiagram
         REAL value
     }
     
-    silver_clean_returns ||--|| bronze_price_history : "derived from"
     silver_price_history_clean ||--|| bronze_price_history : "derived from"
     silver_returns ||--|| silver_price_history_clean : "derived from"
     silver_rolling_volatility ||--|| silver_returns : "derived from"
     gold_rolling_beta_30d ||--|| silver_returns : "derived from"
     gold_max_drawdown ||--|| silver_price_history_clean : "derived from"
-    gold_v_risk_dashboard ||--|| gold_risk_metrics : "derived from"
+    gold_risk_metrics ||--o| gold_rolling_beta_30d : "populated from"
+    gold_risk_metrics ||--o| gold_max_drawdown : "populated from"
+    gold_risk_metrics ||--o| silver_rolling_volatility : "populated from"
 ```
 
 ## Data Dictionary

@@ -110,7 +110,7 @@ class DataIngestor:
         Main function to run the Bronze ingestion pipeline.
         """
         tickers = DataIngestor.get_tickers_from_config()
-        start_date = "2010-01-01"
+        start_date = "2024-01-01"
         end_date = datetime.today().strftime('%Y-%m-%d')
 
         # Fetch data

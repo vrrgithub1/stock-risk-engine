@@ -12,7 +12,12 @@ def create_medallion_schema(db_path=DATABASE_PATH):
     # Bronze: Raw History
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS bronze_price_history (
-            ticker TEXT, date TEXT, adj_close REAL, volume INTEGER
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticker TEXT NOT NULL,
+            date TEXT NOT NULL,
+            open REAL, high REAL, low REAL, close REAL, 
+            adj_close REAL, volume INTEGER,
+            ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     
