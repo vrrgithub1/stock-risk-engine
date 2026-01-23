@@ -175,6 +175,6 @@ def plot_correlation_heatmap(db_path=DATABASE_PATH):
 
 # Try it out for NVDA!
 if __name__ == "__main__":
-#    plot_stock_risk("NVDA")
-#    plot_stock_with_panic("NVDA")
+    plot_stock_risk("NVDA")
+    plot_stock_with_panic("NVDA")
     plot_correlation_heatmap()
