@@ -199,9 +199,9 @@ erDiagram
     silver_rolling_volatility ||--|| silver_returns : "derived from"
     gold_rolling_beta_30d ||--|| silver_returns : "derived from"
     gold_max_drawdown ||--|| silver_price_history_clean : "derived from"
-    gold_risk_metrics ||--o| gold_rolling_beta_30d : "populated from"
-    gold_risk_metrics ||--o| gold_max_drawdown : "populated from"
-    gold_risk_metrics ||--o| silver_rolling_volatility : "populated from"
+    gold_risk_metrics ||--o| gold_rolling_beta_30d : "will be populated from"
+    gold_risk_metrics ||--o| gold_max_drawdown : "will be populated from"
+    gold_risk_metrics ||--o| silver_rolling_volatility : "will be populated from"
 ```
 
 ## Data Dictionary
