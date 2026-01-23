@@ -62,12 +62,12 @@ stock-risk-engine/
 │   init_project.sh         # Project initialization script
 │   README.md               # Project documentation
 │   requirements.txt        # Python dependencies
+│   run_pipeline.sh         # Pipeline execution script
 │
 ├───config/
 │       tickers.yml        # Configuration for stock tickers
 │
 ├───data/
-file
 │   │   stock_risk_vault.db # SQLite database file
 │   │
 │   └───bronze/             # Raw data storage location
@@ -84,7 +84,7 @@ file
 └───src/
     │   __init__.py        # Package initialization
     │   app_visualizer.py  # Visualization module for risk metrics
-    │   config.py          # Configuration utilities
+    │   config.py          # Configuration utilities (ex. DB File Setup)
     │   database.py        # Database schema creation
     │   ingestion.py       # DataIngestor class for fetching and saving data
     │   main.py            # Main entry point for running the pipeline
@@ -97,7 +97,7 @@ file
 **1. Clone the repo:** `git clone <your-repo-url>`<br>
 **2. Setup Conda:** `conda env create -f environment.yml`<br>
 **3. Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.<br>
-**4. Run Pipeline:** `python main.py` (This builds the Bronze/Silver/Gold layers).<br>
+**4. Run Script:** `./run_pipeline.sh` (This builds the Bronze/Silver/Gold layers).<br>
 **5. View Dashboard:** `python src/app_visualizer.py`<br>
 
 ## Installation & Setup
