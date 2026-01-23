@@ -1,4 +1,7 @@
 # config.py
+"""
+Configuration file for the Stock Risk Engine Database.
+""" 
 import os
 
 # Define the base directory of the application

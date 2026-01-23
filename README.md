@@ -67,7 +67,7 @@ stock-risk-engine/
 │       tickers.yml        # Configuration for stock tickers
 │
 ├───data/
-│   │   stock_risk.db       # SQLite database file
+file
 │   │   stock_risk_vault.db # SQLite database file
 │   │
 │   └───bronze/             # Raw data storage location

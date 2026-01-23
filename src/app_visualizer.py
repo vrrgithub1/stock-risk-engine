@@ -1,3 +1,8 @@
+"""
+App Visualizer Module: Functions to create interactive dashboards and visualizations for stock risk analysis.
+"""
+
+
 import sqlite3
 import pandas as pd
 import math
@@ -18,6 +23,10 @@ def safe_pow(x, y):
     return pow(x, y)
 
 def plot_stock_risk(ticker, db_path=DATABASE_PATH):
+    """
+    Plot Stock Risk Dashboard with Price and Rolling Beta
+     1. Load Data from your Gold and Silver Views
+     2. Create an Interactive Dashboard with Plotly"""
     conn = sqlite3.connect(db_path)
 
     conn.create_function("SQRT", 1, safe_sqrt)
@@ -60,6 +69,12 @@ def plot_stock_risk(ticker, db_path=DATABASE_PATH):
     fig.show()
 
 def plot_stock_with_panic(ticker, db_path=DATABASE_PATH):
+    """
+    Plot Stock Risk Dashboard with Panic Overlay
+     1. Load Data including VIX from your Gold and Silver Views
+     2. Create an Interactive Dashboard with Plotly including Panic Overlay where VIX > 20
+    """
+
     conn = sqlite3.connect(db_path)
     conn.create_function("SQRT", 1, safe_sqrt)
     conn.create_function("POWER", 2, safe_pow)
@@ -115,6 +130,13 @@ def plot_stock_with_panic(ticker, db_path=DATABASE_PATH):
     fig.show()
 
 def plot_correlation_heatmap(db_path=DATABASE_PATH):
+    """
+    Plot Correlation Heatmap for all tickers based on Daily Returns
+     1. Load Daily Returns Data from Silver View
+     2. Calculate Correlation Matrix
+     3. Create Heatmap using Plotly
+    """
+        
     conn = sqlite3.connect(db_path)
     
     # 1. Pull daily returns for all tickers in a 'Pivot' format

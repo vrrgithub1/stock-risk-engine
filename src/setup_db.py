@@ -1,3 +1,7 @@
+"""
+Database setup module for creating the Medallion Schema (Bronze, Silver, Gold layers).
+"""
+
 import sqlite3
 import logging
 from config import DATABASE_PATH

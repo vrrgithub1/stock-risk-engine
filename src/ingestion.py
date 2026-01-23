@@ -1,3 +1,7 @@
+"""
+Ingestion module for fetching and storing stock market data.
+"""
+
 import yfinance as yf
 import pandas as pd
 import sqlite3
@@ -12,6 +16,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DataIngestor:
+    """
+    Class to handle data ingestion from Yahoo Finance to SQLite Bronze layer.
+    """
+    
     def __init__(self, db_conn=None):
         if db_conn is None:
             self.db_conn = sqlite3.connect(DATABASE_PATH)

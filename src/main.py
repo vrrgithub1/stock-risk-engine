@@ -1,3 +1,7 @@
+"""
+Main entry point for the Stock Risk Engine pipeline.
+"""
+
 # main.py
 from ingestion import DataIngestor
 from database import create_medallion_schema, run_silver_and_gold_views

@@ -1,8 +1,19 @@
+"""
+Maintenance module for archiving old data from the Bronze layer to Historical storage.
+"""
+
 import sqlite3
 from datetime import datetime, timedelta
 from config import DATABASE_PATH
 
 def archive_old_data(days_to_keep=1095, db_path=DATABASE_PATH):
+    """
+    Archives data older than `days_to_keep` from the Bronze layer to a historical table.
+        Parameters:
+            days_to_keep (int): Number of days to keep in the Bronze layer.
+            db_path (str): Path to the SQLite database file.
+    """
+    
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
