@@ -1,7 +1,8 @@
 import sqlite3
 from datetime import datetime, timedelta
+from config import DATABASE_PATH
 
-def archive_old_data(days_to_keep=365, db_path="data/stock_risk_vault.db"):
+def archive_old_data(days_to_keep=365, db_path=DATABASE_PATH):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     

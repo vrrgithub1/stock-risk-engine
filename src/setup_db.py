@@ -1,10 +1,11 @@
 import sqlite3
 import logging
+from config import DATABASE_PATH
 
 # Configure logging for an audit trail
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def create_medallion_schema(db_name="data/stock_risk_vault.db"):
+def create_medallion_schema(db_name=DATABASE_PATH):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     

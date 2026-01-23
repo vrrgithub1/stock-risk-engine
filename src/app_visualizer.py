@@ -4,6 +4,8 @@ import math
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
+from config import DATABASE_PATH
+
 
 def safe_sqrt(x):
     if x is None or x < 0:
@@ -15,7 +17,7 @@ def safe_pow(x, y):
         return 0.0
     return pow(x, y)
 
-def plot_stock_risk(ticker, db_path="data/stock_risk_vault.db"):
+def plot_stock_risk(ticker, db_path=DATABASE_PATH):
     conn = sqlite3.connect(db_path)
 
     conn.create_function("SQRT", 1, safe_sqrt)
@@ -57,7 +59,7 @@ def plot_stock_risk(ticker, db_path="data/stock_risk_vault.db"):
 
     fig.show()
 
-def plot_stock_with_panic(ticker, db_path="data/stock_risk_vault.db"):
+def plot_stock_with_panic(ticker, db_path=DATABASE_PATH):
     conn = sqlite3.connect(db_path)
     conn.create_function("SQRT", 1, safe_sqrt)
     conn.create_function("POWER", 2, safe_pow)
@@ -112,7 +114,7 @@ def plot_stock_with_panic(ticker, db_path="data/stock_risk_vault.db"):
 
     fig.show()
 
-def plot_correlation_heatmap(db_path="data/stock_risk_vault.db"):
+def plot_correlation_heatmap(db_path=DATABASE_PATH):
     conn = sqlite3.connect(db_path)
     
     # 1. Pull daily returns for all tickers in a 'Pivot' format

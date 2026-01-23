@@ -60,7 +60,6 @@ stock-risk-engine/
 │   .gitignore
 │   environment.yml         # Conda environment configuration
 │   init_project.sh         # Project initialization script
-│   main.py                 # Main entry point for running the pipeline
 │   README.md               # Project documentation
 │   requirements.txt        # Python dependencies
 │
@@ -68,12 +67,16 @@ stock-risk-engine/
 │       tickers.yml        # Configuration for stock tickers
 │
 ├───data/
+│   │   stock_risk.db       # SQLite database file
 │   │   stock_risk_vault.db # SQLite database file
 │   │
-│   └───bronze/            # Raw data storage location
+│   └───bronze/             # Raw data storage location
 │
 ├───docs/
-│       Stock_Risk_Engine_Architecture.png  # Architecture diagram image
+│       Portfolio Coorelation Matrix.png     # Portfolio correlation visualization
+│       Risk Analysis Dashboard.png          # Risk analysis dashboard
+│       Risk Analysis with Panic Overlay.png # Risk analysis with panic overlay
+│       Stock_Risk_Engine_Architecture.png   # Architecture diagram image
 │
 ├───sql/
 │       init_analytics_layer.sql  # SQL script for analytics layer
@@ -81,8 +84,10 @@ stock-risk-engine/
 └───src/
     │   __init__.py        # Package initialization
     │   app_visualizer.py  # Visualization module for risk metrics
+    │   config.py          # Configuration utilities
     │   database.py        # Database schema creation
     │   ingestion.py       # DataIngestor class for fetching and saving data
+    │   main.py            # Main entry point for running the pipeline
     │   maintenance.py     # Maintenance tasks (e.g., archiving)
     │   setup_db.py        # Database setup utilities
 ```

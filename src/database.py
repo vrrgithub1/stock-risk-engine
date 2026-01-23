@@ -1,7 +1,11 @@
 import sqlite3
 import logging
+from config import DATABASE_PATH
 
-def create_medallion_schema(db_path="data/stock_risk.db"):
+DATABASE_PATH = DATABASE_PATH
+ANALYTICS_LAYER_SQL_PATH = "sql/init_analytics_layer.sql"
+
+def create_medallion_schema(db_path=DATABASE_PATH):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
@@ -25,7 +29,7 @@ def create_medallion_schema(db_path="data/stock_risk.db"):
     conn.close()
     print("Database initialized at " + db_path)
 
-def run_silver_and_gold_views(db_path="data/stock_risk.db", sql_path="sql/init_analytics_layer.sql"):
+def run_silver_and_gold_views(db_path=DATABASE_PATH, sql_path=ANALYTICS_LAYER_SQL_PATH):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     

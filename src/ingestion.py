@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 import yaml
 import os
+from config import DATABASE_PATH
 
 # Setup logging for the ingestion pipeline
 logging.basicConfig(level=logging.INFO)
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DataIngestor:
     def __init__(self, db_conn=None):
         if db_conn is None:
-            self.db_conn = sqlite3.connect("data/stock_risk_vault.db")
+            self.db_conn = sqlite3.connect(DATABASE_PATH)
         else:
             self.db_conn = db_conn
 

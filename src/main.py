@@ -1,7 +1,7 @@
 # main.py
-from src.ingestion import DataIngestor
-from src.database import create_medallion_schema, run_silver_and_gold_views
-from src.maintenance import archive_old_data
+from ingestion import DataIngestor
+from database import create_medallion_schema, run_silver_and_gold_views
+from maintenance import archive_old_data
 
 #from src.transformations import run_silver_and_gold_views
 #from src.maintenance import archive_old_data
