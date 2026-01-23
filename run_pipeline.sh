@@ -1,4 +1,5 @@
 #!/bin/bash
-# Run the data pipeline
-cd src
-python main.py
+
+# Run the main application from the current directory
+python src/main.py
+
