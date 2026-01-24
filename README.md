@@ -9,6 +9,10 @@ The Stock Risk Engine is a comprehensive financial analytics platform that inges
 ### Architecture Diagram
 ![Stock Risk Engine Architecture](docs/Stock_Risk_Engine_Architecture.png)
 
+## Author and Developer
+
+Venkat Rajadurai
+
 ## Architecture Overview
 
 This project implements a Medallion Architecture for financial data processing:
@@ -61,6 +65,7 @@ stock-risk-engine/
 │   environment.yml         # Conda environment configuration
 │   init_project.sh         # Project initialization script
 │   README.md               # Project documentation
+│   LICENSE                 # Project license
 │   requirements.txt        # Python dependencies
 │   run_pipeline.sh         # Pipeline execution script
 │
@@ -257,7 +262,6 @@ Currently, the project does not have automated tests. Manual testing can be perf
 3. Make your changes
 4. Test thoroughly
 5. Submit a pull request
-
 
 ## 📈 Key Research Findings (Jan 2024 - Jan 2026)
 | Ticker | Max Drawdown | Avg 30D Beta | Risk Category |

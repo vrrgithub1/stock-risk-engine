@@ -12,6 +12,7 @@ data/*.db
 dist/
 build/
 *.egg-info/
+LICENSE
 
 # --- IDE specific (VS Code) ---
 .vscode/
