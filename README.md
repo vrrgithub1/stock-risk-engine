@@ -67,7 +67,8 @@ stock-risk-engine/
 │   README.md               # Project documentation
 │   LICENSE                 # Project license
 │   requirements.txt        # Python dependencies
-│   run_pipeline.sh         # Pipeline execution script
+│   run_pipeline.bat        # Pipeline execution using windows bat script
+│   run_pipeline.sh         # Pipeline execution using bash script
 │
 ├───config/
 │       tickers.yml        # Configuration for stock tickers
