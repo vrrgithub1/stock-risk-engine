@@ -329,7 +329,47 @@ erDiagram
 | adj_close | REAL | Adjusted closing trade price for the day |
 | volume | INTEGER | Trade volume for the day |
 
+#### Table: bronze_macro_indicators
+| Column | Data Type | Description |
+|:--------|:----------|:------------|
+| indicator | TEXT | Macro indicator symbol (e.g., ^VIX, ^TNX, ^IRX) |
+| date | TEXT | Date of the indicator value (YYYY-MM-DD) |
+| value | REAL | The numeric value of the macro indicator |
+| ingested_at | TIMESTAMP | Timestamp when the record was ingested into the system |
+
+### Silver Layer Tables
+
+#### Table: silver_returns
+| Column | Data Type | Description |
+|:--------|:----------|:------------|
+| ticker | TEXT | Company ticker symbol |
+| trade_date | TEXT | Business or stock trade date (YYYY-MM-DD) |
+| return_1d | REAL | One-day percentage return calculated from adjusted closing prices |
+
+#### Table: silver_rolling_volatility
+| Column | Data Type | Description |
+|:--------|:----------|:------------|
+| ticker | TEXT | Company ticker symbol |
+| calculation_date | TEXT | Date when the volatility was calculated (YYYY-MM-DD) |
+| window_days | INTEGER | The rolling window size in days used for volatility calculation |
+| volatility | REAL | The annualized rolling volatility for the specified window |
+
 ### Gold Layer Tables
+
+#### Table: gold_rolling_beta_30d
+| Column | Data Type | Description |
+|:--------|:----------|:------------|
+| ticker | TEXT | Company ticker symbol |
+| calculation_date | TEXT | Date when the beta was calculated (YYYY-MM-DD) |
+| beta_30d | REAL | The 30-day rolling beta coefficient measuring systematic risk relative to S&P 500 |
+
+#### Table: gold_max_drawdown
+| Column | Data Type | Description |
+|:--------|:----------|:------------|
+| ticker | TEXT | Company ticker symbol |
+| peak_date | TEXT | Date when the price peak occurred (YYYY-MM-DD) |
+| trough_date | TEXT | Date when the price trough occurred (YYYY-MM-DD) |
+| max_drawdown | REAL | The maximum percentage decline from peak to trough |
 
 #### Table: gold_risk_metrics
 | Column | Data Type | Description |
