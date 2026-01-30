@@ -4,7 +4,7 @@ Main entry point for the Stock Risk Engine pipeline.
 
 # main.py
 from ingestion import DataIngestor
-from database import create_medallion_schema, run_silver_and_gold_views
+from database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics
 from maintenance import archive_old_data
 
 #from src.transformations import run_silver_and_gold_views
@@ -19,8 +19,17 @@ def main():
     
     # 2. Build Analytical Views (SQL-based transformations)
     run_silver_and_gold_views()
-    
-    # 3. Cleanup & Archive
+
+    # 3. Update Silver Risk Features
+    update_silver_risk_features()
+
+    # 4. Update Risk Metrics
+    update_risk_metrics()
+
+    # 5. Update Risk Inference Table
+    update_risk_inference()
+
+    # 6. Cleanup & Archive
     archive_old_data()
 
     print("--- Pipeline Complete ---")

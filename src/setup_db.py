@@ -9,73 +9,101 @@ from config import DATABASE_PATH
 # Configure logging for an audit trail
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def create_medallion_schema(db_name=DATABASE_PATH):
-    conn = sqlite3.connect(db_name)
+def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
+    """
+    Creates the medallion schema in the SQLite database.
+    """
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    try:
-        logging.info("Initializing Medallion Schema...")
+    # Bronze: Raw History
 
-        # --- BRONZE LAYER (Raw ODS) ---
-        # Immutable landing zone for raw API ticks
+    if initial_setup:
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS bronze_price_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ticker TEXT NOT NULL,
-                date TEXT NOT NULL,
-                open REAL, high REAL, low REAL, close REAL, 
-                adj_close REAL, volume INTEGER,
-                ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+                DROP TABLE IF EXISTS bronze_price_history
+            """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS bronze_price_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticker TEXT NOT NULL,
+            date TEXT NOT NULL,
+            open REAL, high REAL, low REAL, close REAL, 
+            adj_close REAL, volume INTEGER,
+            ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Gold: Risk Metrics
+
+    cursor.execute("""
+        DROP TABLE IF EXISTS gold_risk_metrics
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS gold_risk_metrics (
+            ticker TEXT,
+            date DATE,
+            actual_beta_130d REAL,
+            actual_vol_30d REAL,
+            actual_return_5d REAL,
+            vix_regime INTEGER,
+            PRIMARY KEY (ticker, date)
+        )
+    """)
+    
+    # Gold: Risk Inference Table
+
+    if initial_setup:
+        cursor.execute("""
+            DROP TABLE IF EXISTS model_feature_store
+        """)
+        cursor.execute("""
+            DROP TABLE IF EXISTS silver_risk_features
         """)
 
-        # --- SILVER LAYER (Cleansed / Curated) ---
-        # A view that handles Data Quality (DQ) - Forward filling and logic returns
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS silver_risk_features (
+            ticker TEXT,
+            date DATE,
+            -- Lagged Features (What the model sees)
+            feat_rolling_vol_30d FLOAT, 
+            feat_rolling_beta_130d FLOAT,
+            feat_cumulative_return_5d FLOAT,
+            feat_market_regime_vix FLOAT,
+            -- The Target Variable (What the model tries to guess)
+            target_beta_drift_5d FLOAT, 
+            PRIMARY KEY (ticker, date)
+        )
+    """)
+
+    if initial_setup:
         cursor.execute("""
-            CREATE VIEW IF NOT EXISTS silver_clean_returns AS
-            SELECT 
-                ticker,
-                date,
-                adj_close,
-                (adj_close / LAG(adj_close) OVER (PARTITION BY ticker ORDER BY date) - 1) AS daily_return
-            FROM bronze_price_history
+            DROP TABLE IF EXISTS model_predictions_audit
+        """)
+        cursor.execute("""
+            DROP TABLE IF EXISTS gold_risk_inference
         """)
 
-        # --- GOLD LAYER (Business Intelligence / Risk) ---
-        # Normalized table for point-in-time risk metrics
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS gold_risk_metrics (
-                ticker TEXT,
-                calculation_date TEXT,
-                metric_type TEXT, -- 'beta', 'sharpe', 'sortino', 'liquidity'
-                period_years INTEGER,
-                value REAL,
-                PRIMARY KEY (ticker, calculation_date, metric_type, period_years)
-            )
-        """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS gold_risk_inference (
+            prediction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prediction_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ticker TEXT,
+            forecast_date DATE,
+            base_beta_130d FLOAT,
+            predicted_drift FLOAT,
+            predicted_beta_final FLOAT,
+            model_version TEXT,
+            actual_beta_realized FLOAT NULL,
+            prediction_error FLOAT NULL
+        )
+    """)
 
-        # Reporting View: The "Wide" Dashboard
-        cursor.execute("""
-            CREATE VIEW IF NOT EXISTS gold_v_risk_dashboard AS
-            SELECT 
-                ticker,
-                calculation_date,
-                MAX(CASE WHEN metric_type = 'beta' AND period_years = 2 THEN value END) AS beta_2y,
-                MAX(CASE WHEN metric_type = 'beta' AND period_years = 5 THEN value END) AS beta_5y,
-                MAX(CASE WHEN metric_type = 'sortino' THEN value END) AS sortino_ratio,
-                MAX(CASE WHEN metric_type = 'liquidity' THEN value END) AS days_to_liquidate
-            FROM gold_risk_metrics
-            GROUP BY 1, 2
-        """)
-
-        conn.commit()
-        logging.info("Schema created successfully (Bronze/Silver/Gold).")
-
-    except sqlite3.Error as e:
-        logging.error(f"Database error: {e}")
-    finally:
-        conn.close()
+    conn.commit()
+    conn.close()
+    print("Database initialized at " + db_path)
 
 if __name__ == "__main__":
-    create_medallion_schema()
+    create_medallion_schema( initial_setup=True)
 

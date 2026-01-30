@@ -24,13 +24,13 @@ def archive_old_data(days_to_keep=1095, db_path=DATABASE_PATH):
     try:
         # 1. Create the Historical Table if it doesn't exist
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS historical_price_archive AS 
+            CREATE TABLE IF NOT EXISTS bronze_historical_price_archive AS 
             SELECT * FROM bronze_price_history WHERE 1=0
         """)
 
         # 2. Move data: Copy to archive, then delete from main
         cursor.execute("""
-            INSERT INTO historical_price_archive 
+            INSERT INTO bronze_historical_price_archive 
             SELECT * FROM bronze_price_history WHERE date < ?
         """, (cutoff_date,))
         

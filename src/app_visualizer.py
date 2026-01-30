@@ -68,7 +68,7 @@ def plot_stock_risk(ticker, db_path=DATABASE_PATH):
 
     fig.show()
 
-def plot_stock_with_panic(ticker, db_path=DATABASE_PATH):
+def plot_stock_risk_with_panic(ticker, db_path=DATABASE_PATH):
     """
     Plot Stock Risk Dashboard with Panic Overlay
      1. Load Data including VIX from your Gold and Silver Views
@@ -176,5 +176,5 @@ def plot_correlation_heatmap(db_path=DATABASE_PATH):
 # Try it out for NVDA!
 if __name__ == "__main__":
     plot_stock_risk("NVDA")
-    plot_stock_with_panic("NVDA")
+    plot_stock_risk_with_panic("NVDA")
     plot_correlation_heatmap()

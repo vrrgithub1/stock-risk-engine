@@ -9,3 +9,10 @@ seaborn>=0.13.0
 PyYAML>=6.0.0
 pandas-datareader>=0.10.0
 statsmodels>=0.14.0
+
+# Machine Learning Logic
+scikit-learn>=1.3.0
+
+# Enhanced Dashboards
+plotly>=5.15.0
+nbformat>=5.9.0
