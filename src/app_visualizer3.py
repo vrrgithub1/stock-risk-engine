@@ -44,6 +44,37 @@ def fetch_inference_data(db_path = DATABASE_PATH):
     print(importance)
     return inference_df
 
+def validate_gold_layer(df):
+    """
+    Quality Gate: Validates data integrity before report generation.
+    Returns True if pass, raises ValueError if fail.
+    """
+    print("Initalizing Automated PDF Validation...")
+
+    # 1. Null Check (ML Integrity)
+    # Ensures the Random Forest actually produced a drift value
+    if df['predicted_beta_drift_5d'].isnull().any():
+        raise ValueError("VALIDATION FAILED: ML Model produced NULL values. Aborting PDF.")
+
+    # 2. Financial Sanity Check (Outlier Detection)
+    # If a Beta > 4.0 is detected, it's usually a data error, not a market reality
+    if (df['feat_rolling_beta_130d'] > 4.0).any():
+        print("CRITICAL WARNING: Extreme Beta (>4.0) detected. Check raw price data.")
+        # You can choose to raise an error here or just log it
+        
+    # 3. Data Freshness Check (API Sync)
+    # Checks if the most recent date in the DB is older than 48 hours
+    latest_date = pd.to_datetime(df['date'].max())
+    if latest_date < (pd.Timestamp.now() - pd.Timedelta(days=2)):
+        raise ValueError(f"VALIDATION FAILED: Data is stale. Last update: {latest_date}")
+
+    print("✅ Validation Passed: Data integrity confirmed for Gold Layer.")
+    return True
+
+# --- Integration into your main loop ---
+# data = fetch_gold_layer_from_duckdb()
+# if validate_gold_layer(data):
+#     generate_pdf_report(data)
 
 def generate_phase2_risk_report(inference_df, importance_data, vix_metadata):
     """
@@ -53,7 +84,6 @@ def generate_phase2_risk_report(inference_df, importance_data, vix_metadata):
     :param importance_data: Dict with 'Feature' and 'Weight' keys
     :param vix_metadata: Dict with 'current_level' and 'regime_label'
     """
-    
     # 1. Setup the Subplots
     # Note: col 2, row 2 is 'domain' type to allow the Gauge Chart
     fig = make_subplots(
@@ -69,6 +99,7 @@ def generate_phase2_risk_report(inference_df, importance_data, vix_metadata):
 
     # 2. Add Forecast Lines (Inference Layer)
     for ticker in ['NVDA', 'TSLA']:
+        inference_df['date'] = pd.to_datetime(inference_df['date']).dt.strftime('%Y-%m-%d')    
         subset = inference_df[inference_df['ticker'] == ticker].sort_values('date')
         forecasted_val = subset['feat_rolling_beta_130d'] + subset['predicted_beta_drift_5d']
         
@@ -123,7 +154,15 @@ def generate_phase2_risk_report(inference_df, importance_data, vix_metadata):
         margin=dict(t=120, b=50, l=50, r=50),
         grid={'rows': 2, 'columns': 2, 'pattern': 'independent'}
     )
-    
+
+    # Assuming your Forecast Chart is in Row 1, Col 1
+    fig.update_xaxes(
+        tickformat="%b %d", 
+        dtick="86400000.0", 
+        tickangle=-45,
+        row=1, col=1  # <--- This ensures it ONLY affects the Forecast chart
+    ) 
+
     return fig
 
 def get_regime_label(vix_level):
@@ -134,19 +173,28 @@ def get_regime_label(vix_level):
     else:
         return "Stress (High Risk/Panic)"
     
-# --- EXAMPLE USAGE ---
 
-df_inference = fetch_inference_data()
-print(df_inference)
-importance_dict = {'Feature': ['Beta', 'Vol', 'Return', 'VIX'], 'Weight': [0.386, 0.344, 0.215, 0.054]}
-conn = sqlite3.connect(DATABASE_PATH)
-df_vix = pd.read_sql("SELECT * FROM gold_market_regime_vix ORDER BY date DESC LIMIT 1", conn)
+def main():
+    # --- EXAMPLE USAGE ---
 
-current_vix_level = df_vix['adj_close'].iloc[-1]
-current_regime_id = df_vix['market_regime_vix'].iloc[-1]
+    df_inference = fetch_inference_data()
+    print(df_inference['date'].unique())   
 
-regime_label = get_regime_label(current_regime_id) # Logic: Standard if 15 <= VIX <= 25
+    if validate_gold_layer(df_inference) == False:
+        raise ValueError("Data validation failed. Aborting further processing.")
 
-vix_info = {'current_level': current_vix_level, 'regime_label': regime_label}
-fig = generate_phase2_risk_report(df_inference, importance_dict, vix_info)
-fig.show()
+    importance_dict = {'Feature': ['Beta', 'Vol', 'Return', 'VIX'], 'Weight': [0.386, 0.344, 0.215, 0.054]}
+    conn = sqlite3.connect(DATABASE_PATH)
+    df_vix = pd.read_sql("SELECT * FROM gold_market_regime_vix ORDER BY date DESC LIMIT 1", conn)
+
+    current_vix_level = df_vix['adj_close'].iloc[-1]
+    current_regime_id = df_vix['market_regime_vix'].iloc[-1]
+
+    regime_label = get_regime_label(current_regime_id) # Logic: Standard if 15 <= VIX <= 25
+
+    vix_info = {'current_level': current_vix_level, 'regime_label': regime_label}
+    fig = generate_phase2_risk_report(df_inference, importance_dict, vix_info)
+    fig.show()
+
+if __name__ == "__main__":
+    main()
