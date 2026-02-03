@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 import yaml
 import os
-from config import DATABASE_PATH
+from src.config import DATABASE_PATH
 
 # Setup logging for the ingestion pipeline
 logging.basicConfig(level=logging.INFO)

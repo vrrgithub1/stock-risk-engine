@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
-from config import DATABASE_PATH
+from src.config import DATABASE_PATH
 import sqlite3
 
 

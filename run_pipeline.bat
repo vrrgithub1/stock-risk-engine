@@ -6,7 +6,7 @@ REM Change directory to the 'src' folder
 REM cd src
 
 REM Run the Python script. Use 'python' or 'py' depending on your system's PATH configuration.
-python src\main.py
+python -m src.main
 
 REM Optional: Keep the window open after execution to see the output
 REM pause

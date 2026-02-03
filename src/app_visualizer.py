@@ -9,7 +9,7 @@ import math
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
-from config import DATABASE_PATH
+from src.config import DATABASE_PATH
 
 
 def safe_sqrt(x):
