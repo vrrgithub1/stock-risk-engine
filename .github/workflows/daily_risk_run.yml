@@ -1,0 +1,9 @@
+name: Daily Stock Risk Engine Run
+on:
+  workflow_dispatch: # This allows manual triggering
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Workflow Indexed"
+      
