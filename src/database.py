@@ -124,7 +124,7 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
 
     conn.commit()
     conn.close()
-    print("Database initialized at " + db_path)
+    print(db_path)
 
 def run_silver_and_gold_views(db_path=DATABASE_PATH, sql_path=ANALYTICS_LAYER_SQL_PATH):
     """
