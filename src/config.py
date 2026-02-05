@@ -7,15 +7,15 @@ from pathlib import Path
 
 # Define the base directory of the application
 #BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path(__file__).resolve()
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 # Data Paths
-DATA_DIR = PROJECT_ROOT / "data"
+DATA_DIR = BASE_DIR / "data"
 DATABASE_PATH = DATA_DIR / "stock_risk_vault.db"
 
 # Report Paths (Used by your Plotly logic)
-REPORT_DIR = PROJECT_ROOT / "reports"
+REPORT_DIR = BASE_DIR / "reports"
 
 # Ensure directories exist
 os.makedirs(DATA_DIR, exist_ok=True)
