@@ -183,7 +183,7 @@ def get_regime_label(vix_level):
         return "Stress (High Risk/Panic)"
     
 
-def main():
+def run_risk_performance_report():
     # --- EXAMPLE USAGE ---
 
     df_inference = fetch_inference_data()
@@ -208,4 +208,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_risk_performance_report()

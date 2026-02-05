@@ -131,10 +131,11 @@ def generate_beta_drift_forecast_report(inference_df, tickers=['NVDA', 'TSLA']):
 
     return fig
 
-def main():
+def run_beta_drift_forecast_report(tickers=['NVDA', 'TSLA']):
+    
     # Fetch inference data
     inference_df = fetch_inference_data()
-    tickers = ['NVDA', 'TSLA']
+    tickers = tickers
     validation_bypass = True
     
     # Validate the gold layer data
@@ -144,5 +145,5 @@ def main():
         save_report(fig, "beta_drift_forecast")
         
 if __name__ == "__main__":
-    main()
+    run_beta_drift_forecast_report()
 
