@@ -124,12 +124,13 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
 
     conn.commit()
     conn.close()
-    print(db_path)
+    print(str(db_path))
 
 def run_silver_and_gold_views(db_path=DATABASE_PATH, sql_path=ANALYTICS_LAYER_SQL_PATH):
     """
     Runs the SQL script to create silver and gold views.
     """
+    print(str(db_path))
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
@@ -139,7 +140,7 @@ def run_silver_and_gold_views(db_path=DATABASE_PATH, sql_path=ANALYTICS_LAYER_SQ
 
     conn.commit()
     conn.close()
-    print("Analytical views created in database at " + db_path)
+    print("Analytical views created in database at " + str(db_path))
 
 
 def update_silver_risk_features(db_path=DATABASE_PATH):
@@ -211,7 +212,7 @@ def update_silver_risk_features(db_path=DATABASE_PATH):
     
     conn.commit()
     conn.close()
-    print("Gold risk inference table updated at " + db_path)
+    print("Gold risk inference table updated at " + str(db_path))
 
 def update_risk_metrics(db_path=DATABASE_PATH):
     """
@@ -256,7 +257,7 @@ def update_risk_metrics(db_path=DATABASE_PATH):
     """)
     conn.commit()
     conn.close()
-    print("Gold risk metrics table updated at " + db_path)
+    print("Gold risk metrics table updated at " + str(db_path))
                    
 
 def update_risk_inference(db_path=DATABASE_PATH):
