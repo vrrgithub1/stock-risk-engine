@@ -138,7 +138,7 @@ def plot_stock_risk_with_panic(ticker, db_path=DATABASE_PATH):
     )
 
     # fig.show()
-    save_report(fig, ticker)
+    save_report(fig, f"_withPanic_{ticker}")
    
 def plot_correlation_heatmap(db_path=DATABASE_PATH):
     """
