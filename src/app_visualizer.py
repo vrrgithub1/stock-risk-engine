@@ -77,12 +77,6 @@ def plot_stock_risk(ticker, db_path=DATABASE_PATH):
     )
     save_report(fig, ticker)
     # fig.show()
-
-    
-    # Save as Static Image (Requires 'kaleido' library in requirements.txt)
-    # fig.write_image(f"{report_dir}/risk_report_{timestamp}.png")
-    
-    print(f"Report saved to {report_dir}/risk_report_{timestamp}.html")
     
 def plot_stock_risk_with_panic(ticker, db_path=DATABASE_PATH):
     """
@@ -192,7 +186,7 @@ def plot_correlation_heatmap(db_path=DATABASE_PATH):
     save_report(fig, "correlation_heatmap")
 
 # Try it out for NVDA!
-if __name__ == "__main__":
-    plot_stock_risk("NVDA")
-    plot_stock_risk_with_panic("NVDA")
-    plot_correlation_heatmap()
+#if __name__ == "__main__":
+#    plot_stock_risk("NVDA")
+#    plot_stock_risk_with_panic("NVDA")
+#    plot_correlation_heatmap()

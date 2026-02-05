@@ -207,5 +207,5 @@ def run_risk_performance_report():
     save_report(fig, "risk_performance_report")
 
 
-if __name__ == "__main__":
-    run_risk_performance_report()
+#if __name__ == "__main__":
+#    run_risk_performance_report()

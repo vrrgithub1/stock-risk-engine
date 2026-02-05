@@ -144,6 +144,6 @@ def run_beta_drift_forecast_report(tickers=['NVDA', 'TSLA']):
         fig = generate_beta_drift_forecast_report(inference_df, tickers)
         save_report(fig, "beta_drift_forecast")
         
-if __name__ == "__main__":
-    run_beta_drift_forecast_report()
+#if __name__ == "__main__":
+#    run_beta_drift_forecast_report()
 
