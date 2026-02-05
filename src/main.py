@@ -6,12 +6,16 @@ Main entry point for the Stock Risk Engine pipeline.
 from src.ingestion import DataIngestor
 from src.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics
 from src.maintenance import archive_old_data
+from src.setup_db import create_medallion_schema
 
 #from src.transformations import run_silver_and_gold_views
 #from src.maintenance import archive_old_data
 
 def main():
     print("--- Starting Stock Risk Engine ---")
+
+    # Initialize the database schema
+    create_medallion_schema(initial_setup=True)
     
     # 1. Ingest Raw Data (Sourcing from tickers.yml inside the module)
     ingestor = DataIngestor()
