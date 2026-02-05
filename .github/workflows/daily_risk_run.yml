@@ -24,7 +24,7 @@ jobs:
 
       - name: Run Risk Engine
         run: |
-          python src/main.py
+          python -m src.main
         env:
           PYTHONPATH: .
 
