@@ -3,9 +3,17 @@ import plotly.graph_objects as go
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
-from src.config import DATABASE_PATH
+from src.config import DATABASE_PATH, REPORT_DIR
+from datetime import datetime
 import sqlite3
 
+def save_report(fig, ticker):
+    timestamp = datetime.now().strftime("%Y-%m-%d")
+    # Use the path from config
+    file_path = REPORT_DIR / f"risk_report_{ticker}_{timestamp}.html"
+    
+    fig.write_html(str(file_path))
+    print(f"Report successfully archived at: {file_path}")
 
 def fetch_inference_data(db_path = DATABASE_PATH):
     # Connect to the SQLite database
@@ -133,8 +141,8 @@ def main():
     if validate_gold_layer(inference_df) or validation_bypass:
         # Generate the Beta Drift Forecast Report
         fig = generate_beta_drift_forecast_report(inference_df, tickers)
-        fig.show()
-
+        save_report(fig, "beta_drift_forecast")
+        
 if __name__ == "__main__":
     main()
 

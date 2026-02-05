@@ -9,7 +9,9 @@ import math
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
-from src.config import DATABASE_PATH
+from src.config import DATABASE_PATH, REPORT_DIR
+import os
+from datetime import datetime
 
 
 def safe_sqrt(x):
@@ -21,6 +23,14 @@ def safe_pow(x, y):
     if x is None:
         return 0.0
     return pow(x, y)
+
+def save_report(fig, ticker):
+    timestamp = datetime.now().strftime("%Y-%m-%d")
+    # Use the path from config
+    file_path = REPORT_DIR / f"risk_report_{ticker}_{timestamp}.html"
+    
+    fig.write_html(str(file_path))
+    print(f"Report successfully archived at: {file_path}")
 
 def plot_stock_risk(ticker, db_path=DATABASE_PATH):
     """
@@ -65,9 +75,15 @@ def plot_stock_risk(ticker, db_path=DATABASE_PATH):
         template="plotly_white",
         hovermode="x unified"
     )
+    save_report(fig, ticker)
+    # fig.show()
 
-    fig.show()
-
+    
+    # Save as Static Image (Requires 'kaleido' library in requirements.txt)
+    # fig.write_image(f"{report_dir}/risk_report_{timestamp}.png")
+    
+    print(f"Report saved to {report_dir}/risk_report_{timestamp}.html")
+    
 def plot_stock_risk_with_panic(ticker, db_path=DATABASE_PATH):
     """
     Plot Stock Risk Dashboard with Panic Overlay
@@ -127,8 +143,9 @@ def plot_stock_risk_with_panic(ticker, db_path=DATABASE_PATH):
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
 
-    fig.show()
-
+    # fig.show()
+    save_report(fig, ticker)
+   
 def plot_correlation_heatmap(db_path=DATABASE_PATH):
     """
     Plot Correlation Heatmap for all tickers based on Daily Returns
@@ -171,7 +188,8 @@ def plot_correlation_heatmap(db_path=DATABASE_PATH):
         template="plotly_white"
     )
 
-    fig.show()
+    # fig.show()
+    save_report(fig, "correlation_heatmap")
 
 # Try it out for NVDA!
 if __name__ == "__main__":

@@ -4,9 +4,17 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
-from src.config import DATABASE_PATH
+from src.config import DATABASE_PATH, REPORT_DIR
+from datetime import datetime
 import sqlite3
 
+def save_report(fig, ticker):
+    timestamp = datetime.now().strftime("%Y-%m-%d")
+    # Use the path from config
+    file_path = REPORT_DIR / f"risk_report_{ticker}_{timestamp}.html"
+    
+    fig.write_html(str(file_path))
+    print(f"Report successfully archived at: {file_path}")
 
 def fetch_inference_data(db_path = DATABASE_PATH):
     # Connect to the SQLite database
@@ -196,7 +204,8 @@ def main():
 
     vix_info = {'current_level': current_vix_level, 'regime_label': regime_label}
     fig = generate_phase2_risk_report(df_inference, importance_dict, vix_info)
-    fig.show()
+    save_report(fig, "risk_performance_report")
+
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,38 @@
+name: Daily Stock Risk Engine Run
+
+on:
+  schedule:
+    # Runs at 14:00 UTC (9:00 AM EST) every weekday
+    - cron: '0 14 * * 1-5'
+  workflow_dispatch: # Allows you to run it manually for testing
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Risk Engine
+        run: |
+          python src/main.py
+        env:
+          # If you use API keys later, they go here
+          PYTHONPATH: .
+
+      - name: Upload Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-risk-report-${{ github.run_id }} # This gives each day a unique ID
+          path: reports/ # Adjust this to wherever your PDF is saved
+          
