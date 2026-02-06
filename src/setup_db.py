@@ -4,7 +4,7 @@ Database setup module for creating the Medallion Schema (Bronze, Silver, Gold la
 
 import sqlite3
 import logging
-from config import DATABASE_PATH
+from src.config import DATABASE_PATH
 
 # Configure logging for an audit trail
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -102,7 +102,7 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
 
     conn.commit()
     conn.close()
-    print("Database initialized at " + db_path)
+    print("Database initialized at " + str(db_path))
 
 if __name__ == "__main__":
     create_medallion_schema( initial_setup=True)
