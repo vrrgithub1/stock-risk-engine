@@ -11,6 +11,8 @@ from src.app_visualizer import plot_stock_risk, plot_stock_risk_with_panic, plot
 from src.config import DATABASE_PATH, REPORT_DIR
 from src.app_visualizer2 import run_beta_drift_forecast_report
 from src.app_visualizer3 import run_risk_performance_report
+import os
+import yaml
 #from src.transformations import run_silver_and_gold_views
 #from src.maintenance import archive_old_data
 
@@ -45,7 +47,7 @@ def main():
 
     tickers = ingestor.get_tickers_from_config()
     print(f"Generating reports for tickers: {tickers}")
-    
+
     plot_stock_risk("NVDA")
     plot_stock_risk_with_panic("NVDA")
     plot_correlation_heatmap()
