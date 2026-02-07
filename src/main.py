@@ -4,7 +4,7 @@ Main entry point for the Stock Risk Engine pipeline.
 
 # main.py
 from src.ingestion import DataIngestor
-from src.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics
+from src.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics, get_universe_tickers_from_config
 from src.maintenance import archive_old_data
 from src.setup_db import create_medallion_schema
 from src.app_visualizer import plot_stock_risk, plot_stock_risk_with_panic, plot_correlation_heatmap
@@ -45,7 +45,7 @@ def main():
 
     # 8. Generate Visual Reports
 
-    tickers = ingestor.tickers  # Access the tickers list stored during ingestion
+    tickers = get_universe_tickers_from_config()  # Access the tickers list stored during ingestion
     print(f"Generating reports for tickers: {tickers}")
 
     for ticker in tickers:
@@ -55,7 +55,7 @@ def main():
             print(f"Generating report for {ticker}...")
             plot_stock_risk(ticker)
             plot_stock_risk_with_panic(ticker)
-            
+
     plot_correlation_heatmap()
     run_beta_drift_forecast_report()
     run_risk_performance_report()

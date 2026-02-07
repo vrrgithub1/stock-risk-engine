@@ -5,6 +5,8 @@ import sqlite3
 import logging
 import math
 from turtle import pd
+
+import yaml
 from src.config import DATABASE_PATH
 
 def safe_sqrt(x):
@@ -30,6 +32,37 @@ def safe_exp(x):
 
 DATABASE_PATH = DATABASE_PATH
 ANALYTICS_LAYER_SQL_PATH = "sql/init_analytics_layer.sql"
+TICKERS_YAML_PATH = "config/tickers.yml"
+
+def get_universe_tickers_from_config(config_path=TICKERS_YAML_PATH):
+    """
+    Reads the tickers.yml file and returns a flat list of all unique symbols.
+    """
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    
+    tickers = set()
+    for category in config.values():
+        if category == "universe_tickers":
+            tickers.update(config[category])
+    
+    return sorted(tickers)
+
+
+def get_spotlight_tickers_from_config(config_path=TICKERS_YAML_PATH):
+    """
+    Reads the tickers.yml file and returns a flat list of all unique symbols.
+    """
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    
+    tickers = set()
+    for category in config.values():
+        if category == "spotlight_tickers":
+            tickers.update(config[category])
+    
+    return sorted(tickers)
+
 
 def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
     """

@@ -110,7 +110,8 @@ class DataIngestor:
         # Extract all symbols from the different categories
         all_tickers = []
         for category in config:
-            all_tickers.extend(config[category])
+            if category not in ["universe_tickers", "spotlight_tickers"]:  # Only pull from market indicators, not universe/spotlight lists
+                all_tickers.extend(config[category])
         
         # Return unique values only (in case you listed a ticker twice)
         return list(set(all_tickers))

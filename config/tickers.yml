@@ -18,4 +18,6 @@ indicators:
   - ^VIX   # CBOE Volatility Index
   - ^TNX   # 10-Year Treasury Note Yield
   - ^IRX   # 13-Week Treasury Bill
-  
+
+universe_tickers: ['XOM', 'CVX', 'PG', 'NVDA', 'TSLA']
+spotlight_tickers: ['NVDA', 'TSLA'] # The tickers you want the detailed Drift/Performance reports for  
