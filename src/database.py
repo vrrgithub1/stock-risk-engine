@@ -41,12 +41,13 @@ def get_universe_tickers_from_config(config_path=TICKERS_YAML_PATH):
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
     
-    tickers = set()
-    for category in config.values():
-        if category == "universe_tickers":
-            tickers.update(config[category])
+    tickers = []
+    for category in config:
+        if category in ["universe_tickers"]:
+            tickers.extend(config[category])
     
-    return sorted(tickers)
+    return sorted(list(set(tickers)))
+
 
 
 def get_spotlight_tickers_from_config(config_path=TICKERS_YAML_PATH):
@@ -56,12 +57,13 @@ def get_spotlight_tickers_from_config(config_path=TICKERS_YAML_PATH):
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
     
-    tickers = set()
-    for category in config.values():
-        if category == "spotlight_tickers":
-            tickers.update(config[category])
     
-    return sorted(tickers)
+    tickers = []
+    for category in config:
+        if category in ["spotlight_tickers"]:
+            tickers.extend(config[category])
+    
+    return sorted(list(set(tickers)))
 
 
 def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
