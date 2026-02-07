@@ -14,6 +14,10 @@ The **Stock Risk Engine** is an end-to-end predictive analytics platform designe
 ### Architecture Diagram
 ![Stock Risk Engine Architecture](docs/Stock_Risk_Engine_Architecture.png)
 
+### MLOps Automation Architecture
+The Stock Risk Engine has been evolved into a fully automated, cloud-native MLOps pipeline. By leveraging GitHub Actions as the primary orchestration layer, the system now performs daily asynchronous data ingestion, feature engineering, and predictive modeling on a scheduled cron-basis. The architecture utilizes a stateless POSIX environment that dynamically initializes a schema-on-run SQLite database, ensuring data integrity across ephemeral runners. Upon successful model inference—which currently prioritizes rolling beta and market regime volatility as primary risk vectors—the system generates a suite of ticker-specific visualizations. These assets, including synthetic stress-test ('Panic') reports, are captured as immutable build artifacts, providing a comprehensive daily audit trail of market risk performance.
+![MLOps Automation Architecture](docs/MLOps%20Automation%20Architecture.png)
+
 ## 🛠️ Tech Stack
 
 * **Engine:** Python 3.x, Scikit-Learn (Random Forest Regressor).
