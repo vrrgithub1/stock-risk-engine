@@ -7,6 +7,7 @@ from sklearn.metrics import mean_squared_error
 from src.config import DATABASE_PATH, REPORT_DIR
 from datetime import datetime
 import sqlite3
+from src.database import get_spotlight_tickers_from_config, get_universe_tickers_from_config
 
 def save_report(fig, ticker):
     timestamp = datetime.now().strftime("%Y-%m-%d")
@@ -85,7 +86,7 @@ def validate_gold_layer(df):
 # if validate_gold_layer(data):
 #     generate_pdf_report(data)
 
-def generate_phase2_risk_report(inference_df, importance_data, vix_metadata):
+def generate_phase2_risk_report(inference_df, importance_data, vix_metadata, spotlight_tickers):
     """
     Generates the Phase II Executive Report with Forecasts, Logic, and Market Context.
     
@@ -107,7 +108,7 @@ def generate_phase2_risk_report(inference_df, importance_data, vix_metadata):
     )
 
     # 2. Add Forecast Lines (Inference Layer)
-    for ticker in ['NVDA', 'TSLA']:
+    for ticker in spotlight_tickers:
         inference_df['date'] = pd.to_datetime(inference_df['date']).dt.strftime('%Y-%m-%d')    
         subset = inference_df[inference_df['ticker'] == ticker].sort_values('date')
         forecasted_val = subset['feat_rolling_beta_130d'] + subset['predicted_beta_drift_5d']
@@ -203,7 +204,9 @@ def run_risk_performance_report():
     regime_label = get_regime_label(current_regime_id) # Logic: Standard if 15 <= VIX <= 25
 
     vix_info = {'current_level': current_vix_level, 'regime_label': regime_label}
-    fig = generate_phase2_risk_report(df_inference, importance_dict, vix_info)
+    spotlight_tickers = get_spotlight_tickers_from_config()  
+
+    fig = generate_phase2_risk_report(df_inference, importance_dict, vix_info, spotlight_tickers)
     save_report(fig, "risk_performance_report")
 
 

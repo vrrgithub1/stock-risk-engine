@@ -4,7 +4,7 @@ Main entry point for the Stock Risk Engine pipeline.
 
 # main.py
 from src.ingestion import DataIngestor
-from src.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics, get_universe_tickers_from_config
+from src.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics, get_universe_tickers_from_config, get_spotlight_tickers_from_config
 from src.maintenance import archive_old_data
 from src.setup_db import create_medallion_schema
 from src.app_visualizer import plot_stock_risk, plot_stock_risk_with_panic, plot_correlation_heatmap
@@ -57,7 +57,11 @@ def main():
             plot_stock_risk_with_panic(ticker)
 
     plot_correlation_heatmap()
-    run_beta_drift_forecast_report()
+
+    spotlight_tickers = get_spotlight_tickers_from_config()
+    print(f"Generating detailed reports for spotlight tickers: {spotlight_tickers}")    
+
+    run_beta_drift_forecast_report(tickers=spotlight_tickers)
     run_risk_performance_report()
 
 if __name__ == "__main__":

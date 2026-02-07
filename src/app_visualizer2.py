@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from src.config import DATABASE_PATH, REPORT_DIR
+from src.database import get_spotlight_tickers_from_config, get_universe_tickers_from_config
 from datetime import datetime
 import sqlite3
 
