@@ -93,7 +93,7 @@ class DataIngestor:
             conn.commit()
         logger.info("Duplicate cleanup complete.")
 
-    def get_tickers_from_config(config_path="config/tickers.yml"):
+    def get_tickers_from_config(config_path=str("config/tickers.yml")):
         """
         Reads the tickers.yml file and returns a flat list of all unique symbols.
         """
