@@ -45,7 +45,8 @@ def main():
 
     # 8. Generate Visual Reports
 
-    tickers = ingestor.get_tickers_from_config()
+    yaml_path = ingestor.tickers_yaml_path
+    tickers = ingestor.get_tickers_from_config(yaml_path)
     print(f"Generating reports for tickers: {tickers}")
 
     plot_stock_risk("NVDA")

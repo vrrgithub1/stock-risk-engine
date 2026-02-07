@@ -19,6 +19,7 @@ class DataIngestor:
     """
     Class to handle data ingestion from Yahoo Finance to SQLite Bronze layer.
     """
+    tickers_yaml_path = str("config/tickers.yml")
     
     def __init__(self, db_conn=None):
         if db_conn is None:
