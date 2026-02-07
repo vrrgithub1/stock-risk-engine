@@ -20,6 +20,7 @@ class DataIngestor:
     Class to handle data ingestion from Yahoo Finance to SQLite Bronze layer.
     """
     tickers_yaml_path = str("config/tickers.yml")
+    tickers = []
     
     def __init__(self, db_conn=None):
         if db_conn is None:
@@ -119,6 +120,7 @@ class DataIngestor:
         Main function to run the Bronze ingestion pipeline.
         """
         tickers = DataIngestor.get_tickers_from_config()
+        self.tickers = tickers  # Store for later use in main.py
         start_date = "2024-01-01"
         end_date = datetime.today().strftime('%Y-%m-%d')
 

@@ -45,8 +45,8 @@ def main():
 
     # 8. Generate Visual Reports
 
-    yaml_path = ingestor.tickers_yaml_path
-    print(f"Generating reports for tickers defined in: {yaml_path}")
+    tickers = ingestor.tickers  # Access the tickers list stored during ingestion
+    print(f"Generating reports for tickers: {tickers}")
 #    tickers = ingestor.get_tickers_from_config(yaml_path)
 #    print(f"Generating reports for tickers: {tickers}")
 
