@@ -47,11 +47,15 @@ def main():
 
     tickers = ingestor.tickers  # Access the tickers list stored during ingestion
     print(f"Generating reports for tickers: {tickers}")
-#    tickers = ingestor.get_tickers_from_config(yaml_path)
-#    print(f"Generating reports for tickers: {tickers}")
 
-    plot_stock_risk("NVDA")
-    plot_stock_risk_with_panic("NVDA")
+    for ticker in tickers:
+        if ticker.startswith("^"):  # Skip indices for individual stock reports
+            continue
+        else:
+            print(f"Generating report for {ticker}...")
+            plot_stock_risk(ticker)
+            plot_stock_risk_with_panic(ticker)
+            
     plot_correlation_heatmap()
     run_beta_drift_forecast_report()
     run_risk_performance_report()
