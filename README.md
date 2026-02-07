@@ -231,18 +231,52 @@ You can modify `main.py` or the ingestion logic in `src/ingestion.py` to fetch d
 
 ```python
 from src.ingestion import DataIngestor
-import sqlite3
+from src.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics
+from src.maintenance import archive_old_data
+from src.setup_db import create_medallion_schema
+from src.app_visualizer import plot_stock_risk, plot_stock_risk_with_panic, plot_correlation_heatmap
+from src.config import DATABASE_PATH, REPORT_DIR
+from src.app_visualizer2 import run_beta_drift_forecast_report
+from src.app_visualizer3 import run_risk_performance_report
+#from src.transformations import run_silver_and_gold_views
+#from src.maintenance import archive_old_data
 
-# Connect to database
-conn = sqlite3.connect("data/stock_risk_vault.db")
-ingestor = DataIngestor(conn)
+def main():
+    print("--- Starting Stock Risk Engine ---")
 
-# Fetch custom stocks
-data = ingestor.fetch_stock_data(['AAPL', 'GOOGL'], '2023-01-01', '2024-01-01')
-ingestor.save_to_bronze(data)
+    # Initialize the database schema
+    create_medallion_schema(initial_setup=True)
+    
+    # 1. Ingest Raw Data (Sourcing from tickers.yml inside the module)
+    ingestor = DataIngestor()
+    ingestor.run_bronze_ingestion()
+    
+    # 2. Build Analytical Views (SQL-based transformations)
+    run_silver_and_gold_views()
 
-# Clean up duplicates
-ingestor.cleanup_duplicates()
+    # 3. Update Silver Risk Features
+    update_silver_risk_features()
+
+    # 4. Update Risk Metrics
+    update_risk_metrics()
+
+    # 5. Update Risk Inference Table
+    update_risk_inference()
+
+    # 6. Cleanup & Archive
+    archive_old_data()
+
+    print("--- Pipeline Complete ---")
+
+    plot_stock_risk("NVDA")
+    plot_stock_risk_with_panic("NVDA")
+    plot_correlation_heatmap()
+    run_beta_drift_forecast_report()
+    run_risk_performance_report()
+
+if __name__ == "__main__":
+    main()
+
 ```
 
 ### Entity-Relationship Diagram (ERD)

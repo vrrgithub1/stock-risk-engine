@@ -17,30 +17,35 @@ from src.app_visualizer3 import run_risk_performance_report
 def main():
     print("--- Starting Stock Risk Engine ---")
 
-    # Initialize the database schema
+    # 1. Initialize the database schema
     create_medallion_schema(initial_setup=True)
     
-    # 1. Ingest Raw Data (Sourcing from tickers.yml inside the module)
+    # 2. Ingest Raw Data (Sourcing from tickers.yml inside the module)
     ingestor = DataIngestor()
     ingestor.run_bronze_ingestion()
     
-    # 2. Build Analytical Views (SQL-based transformations)
+    # 3. Build Analytical Views (SQL-based transformations)
     run_silver_and_gold_views()
 
-    # 3. Update Silver Risk Features
+    # 4. Update Silver Risk Features
     update_silver_risk_features()
 
-    # 4. Update Risk Metrics
+    # 5. Update Risk Metrics
     update_risk_metrics()
 
-    # 5. Update Risk Inference Table
+    # 6. Update Risk Inference Table
     update_risk_inference()
 
-    # 6. Cleanup & Archive
+    # 7. Cleanup & Archive
     archive_old_data()
 
     print("--- Pipeline Complete ---")
 
+    # 8. Generate Visual Reports
+
+    tickers = ingestor.get_tickers_from_config()
+    print(f"Generating reports for tickers: {tickers}")
+    
     plot_stock_risk("NVDA")
     plot_stock_risk_with_panic("NVDA")
     plot_correlation_heatmap()
