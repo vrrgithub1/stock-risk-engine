@@ -7,6 +7,8 @@ env/
 venv/
 .env
 data/*.db
+reports/
+reports/*.*
 
 # --- Distribution / Build ---
 dist/
