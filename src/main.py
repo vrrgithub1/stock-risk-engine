@@ -16,11 +16,14 @@ import yaml
 #from src.transformations import run_silver_and_gold_views
 #from src.maintenance import archive_old_data
 
-def main():
+def main(docker_mode=False):
     print("--- Starting Stock Risk Engine ---")
 
     # 1. Initialize the database schema
-    create_medallion_schema(initial_setup=True)
+    if not docker_mode:
+        continue
+    else:
+        create_medallion_schema(initial_setup=True)
     
     # 2. Ingest Raw Data (Sourcing from tickers.yml inside the module)
     ingestor = DataIngestor()
