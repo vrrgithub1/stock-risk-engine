@@ -19,8 +19,11 @@ import yaml
 def main(docker_mode=False):
     print("--- Starting Stock Risk Engine ---")
 
+    print(f"Running in {'Docker' if docker_mode else 'Local'} mode.")
+
     # 1. Initialize the database schema
     if docker_mode:
+        print("Initializing database schema in Docker mode...")
         create_medallion_schema(initial_setup=True)
     
     # 2. Ingest Raw Data (Sourcing from tickers.yml inside the module)
