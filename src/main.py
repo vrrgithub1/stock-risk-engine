@@ -13,10 +13,19 @@ from src.app_visualizer2 import run_beta_drift_forecast_report
 from src.app_visualizer3 import run_risk_performance_report
 import os
 import yaml
+import argparse
 #from src.transformations import run_silver_and_gold_views
 #from src.maintenance import archive_old_data
 
 def main(docker_mode=False):
+
+    parser = argparse.ArgumentParser(description="Run the Stock Risk Engine pipeline.")
+    parser.add_argument("--docker_mode", action="store_true", help="Run in Docker mode.")
+    args = parser.parse_args()
+
+    print(f"Arguments received: {args.docker_mode}") 
+    docker_mode = args.docker_mode
+    
     print("--- Starting Stock Risk Engine ---")
 
     print(f"Running in {'Docker' if docker_mode else 'Local'} mode.")
