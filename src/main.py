@@ -14,8 +14,6 @@ from src.app_visualizer3 import run_risk_performance_report
 import os
 import yaml
 import argparse
-#from src.transformations import run_silver_and_gold_views
-#from src.maintenance import archive_old_data
 
 def main():
 

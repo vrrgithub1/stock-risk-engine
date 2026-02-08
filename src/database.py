@@ -7,7 +7,7 @@ import math
 from turtle import pd
 
 import yaml
-from src.config import DATABASE_PATH
+from src.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
 
 def safe_sqrt(x):
     if x is None or x < 0:
@@ -31,8 +31,10 @@ def safe_exp(x):
 
 
 DATABASE_PATH = DATABASE_PATH
-ANALYTICS_LAYER_SQL_PATH = "sql/init_analytics_layer.sql"
-TICKERS_YAML_PATH = "config/tickers.yml"
+ANALYTICS_LAYER_SQL_PATH = SQL_DIR / "init_analytics_layer.sql"
+TICKERS_YAML_PATH = TICKERS_YAML_PATH
+REPORT_DIR = REPORT_DIR
+
 
 def get_universe_tickers_from_config(config_path=TICKERS_YAML_PATH):
     """

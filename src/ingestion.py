@@ -9,7 +9,10 @@ import logging
 from datetime import datetime
 import yaml
 import os
-from src.config import DATABASE_PATH
+from src.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
+
+TICKERS_YAML_PATH = TICKERS_YAML_PATH
+DATABASE_PATH = DATABASE_PATH
 
 # Setup logging for the ingestion pipeline
 logging.basicConfig(level=logging.INFO)
@@ -19,7 +22,7 @@ class DataIngestor:
     """
     Class to handle data ingestion from Yahoo Finance to SQLite Bronze layer.
     """
-    tickers_yaml_path = str("config/tickers.yml")
+    tickers_yaml_path = TICKERS_YAML_PATH
     tickers = []
     
     def __init__(self, db_conn=None):
