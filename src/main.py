@@ -17,15 +17,15 @@ import argparse
 #from src.transformations import run_silver_and_gold_views
 #from src.maintenance import archive_old_data
 
-def main(docker_mode=False):
+def main():
 
     parser = argparse.ArgumentParser(description="Run the Stock Risk Engine pipeline.")
-    parser.add_argument("--docker_mode", action="store_true", help="Run in Docker mode.")
+    parser.add_argument("--dockermode", action="store_true", help="Run in Docker mode.")
     args = parser.parse_args()
 
-    print(f"Arguments received: {args.docker_mode}") 
-    docker_mode = args.docker_mode
-    
+    print(f"Arguments received: {args.dockermode}") 
+    docker_mode = args.dockermode
+
     print("--- Starting Stock Risk Engine ---")
 
     print(f"Running in {'Docker' if docker_mode else 'Local'} mode.")
