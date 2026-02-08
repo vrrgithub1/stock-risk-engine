@@ -20,9 +20,7 @@ def main(docker_mode=False):
     print("--- Starting Stock Risk Engine ---")
 
     # 1. Initialize the database schema
-    if not docker_mode:
-        continue
-    else:
+    if docker_mode:
         create_medallion_schema(initial_setup=True)
     
     # 2. Ingest Raw Data (Sourcing from tickers.yml inside the module)
