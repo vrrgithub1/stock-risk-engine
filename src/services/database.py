@@ -159,6 +159,26 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
         )
     """)
 
+    print("Creating gold_risk_var_summary table...")
+    if initial_setup:
+        cursor.execute("""
+            DROP TABLE IF EXISTS gold_risk_var_summary
+        """)
+
+    print("Creating gold_risk_var_summary table...")
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS gold_risk_var_summary (
+            ticker TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            historical_var FLOAT,
+            parametric_var FLOAT,
+            monte_carlo_var FLOAT,
+            display_text TEXT,
+            PRIMARY KEY (ticker, timestamp)
+        )
+    """)
+    print("Successfully created gold_risk_var_summary table.")  
+
     conn.commit()
     conn.close()
     print(str(db_path))

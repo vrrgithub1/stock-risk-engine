@@ -4,21 +4,32 @@ from scipy.stats import norm
 
 class VarEngine:
     def __init__(self, confidence_level=0.95):
-        self.conf_level = confidence_level
+        self.confidence_level = confidence_level
 
     def calculate_historical_var(self, returns):
-        """
-        Non-parametric: Simply finds the percentile of past returns.
-        Captures 'Fat Tails' better than Parametric.
-        """
-        return np.percentile(returns, (1 - self.conf_level) * 100)
+        """Finds the actual percentile of past returns."""
+        # Returns the value below which (1 - confidence_level)% of returns fall
+        return np.percentile(returns, (1 - self.confidence_level) * 100)
 
     def calculate_parametric_var(self, returns):
+        """Calculates VaR based on Normal Distribution assumptions."""
+        mu = np.mean(returns)
+        sigma = np.std(returns)
+        # Z-score for the confidence level
+        z_score = norm.ppf(1 - self.confidence_level)
+        return mu + z_score * sigma
+    
+    def calculate_monte_carlo_var(self, returns, simulations=10000):
         """
-        Variance-Covariance Method: Assumes Normal Distribution.
-        Great for clean, mathematical modeling.
+        Simulates 10,000 potential future returns to find the 5th percentile risk.
         """
         mu = np.mean(returns)
         sigma = np.std(returns)
-        return norm.ppf(1 - self.conf_level, mu, sigma)
-    
+        
+        # Generate random scenarios based on mean and standard deviation
+        simulated_returns = np.random.normal(mu, sigma, simulations)
+        
+        # Find the 5th percentile (for 95% confidence)
+        mc_var = np.percentile(simulated_returns, (1 - self.confidence_level) * 100)
+        
+        return float(mc_var)    

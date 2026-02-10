@@ -89,5 +89,14 @@ def main():
     repgen.plot_beta_drift_forecast_report()
     repgen.plot_risk_performance_report()
 
+    for ticker in tickers:
+        if ticker.startswith("^"):  # Skip indices for individual stock reports
+            continue
+        else:
+            print(f"Generating report for {ticker}...")
+            var_summary = repgen.get_var_risk_summary(ticker)  # This will print the VaR summary to console
+            print(f"VaR Summary for {ticker}: {var_summary}")
+
+
 if __name__ == "__main__":
     main()

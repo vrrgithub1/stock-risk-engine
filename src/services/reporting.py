@@ -19,6 +19,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from src.utils.config import DATABASE_PATH, REPORT_DIR
 from src.services.database import get_spotlight_tickers_from_config, get_universe_tickers_from_config
+from src.core.var_engine import VarEngine
 import os
 from datetime import datetime
 
@@ -438,6 +439,55 @@ class ReportGenerator:
         ) 
 
         self.save_report(fig, "risk_performance_report")
+
+    def get_var_risk_summary(self, ticker, trading_days=252, confidence_level=0.95):
+        """
+        Generates a textual summary of the stock's risk profile based on VaR calculations.
+         - Historical VaR: Based on actual past returns
+         - Parametric VaR: Based on mean and volatility assuming normal distribution
+         - Output: A formatted string summary that can be included in reports or dashboards
+        """
+
+        conn = sqlite3.connect(self.db_path)
+        
+        # 1. Updated Query to include VIX data
+        query = f"""
+        SELECT 
+            r.date, 
+            r.daily_return
+        FROM silver_clean_returns r
+        WHERE r.ticker = '{ticker}' 
+        ORDER BY r.date DESC
+        LIMIT {trading_days}  -- Last 252 trading days (~1 year)
+        """
+        df = pd.read_sql(query, conn)
+        returns = df.set_index('date')['daily_return'].dropna().values
+        conn.close()
+
+        var_engine = VarEngine(confidence_level=confidence_level)   
+        historical_var = var_engine.calculate_historical_var(returns) 
+        parametric_var = var_engine.calculate_parametric_var(returns) 
+        monte_carlo_var = var_engine.calculate_monte_carlo_var(returns) 
+        display_text = f"95% Daily VaR: {abs(historical_var)*100:.2f}% (Historical)"
+
+        conn = sqlite3.connect(self.db_path)
+
+        insert_query = '''
+            INSERT INTO gold_risk_var_summary (ticker, historical_var, parametric_var, monte_carlo_var, display_text)
+            VALUES (?, ?, ?, ?, ?);
+        '''      
+        conn.execute(insert_query, (ticker, historical_var, parametric_var, monte_carlo_var, display_text))  
+
+        conn.commit()
+        conn.close()
+
+        return {
+            "ticker": ticker,
+            "historical_var": round(float(historical_var), 4),
+            "parametric_var": round(float(parametric_var), 4),
+            "monte_carlo_var": round(float(monte_carlo_var), 4),
+            'display_text': f"95% Daily VaR: {abs(historical_var)*100:.2f}% (Historical)"
+        }
 
 if __name__ == "__main__":
     print("Report Generator module loaded successfully. Ready to generate reports!")
