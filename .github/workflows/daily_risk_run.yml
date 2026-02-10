@@ -26,7 +26,7 @@ jobs:
 
       - name: Run Risk Engine
         run: |
-          python -m src.main --dockermode
+          python src/main.py --dockermode
         env:
           PYTHONPATH: .
 
