@@ -346,6 +346,11 @@ def update_risk_inference(db_path=DATABASE_PATH):
 
     # 4. Train the Model
     model = RandomForestRegressor(n_estimators=100, random_state=42)
+
+    if X_train is None or len(X_train) == 0:
+        print("⚠️ Skipping Risk Inference update: Not enough data in Silver/Gold views to train model.")
+        return
+    
     model.fit(X_train, y_train)
 
     # 5. Predict the "NULL" values (The 46 rows)
