@@ -4,9 +4,17 @@ Main entry point for the Stock Risk Engine pipeline.
 
 # main.py
 from src.services.ingestion import DataIngestor
-from src.services.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics, get_universe_tickers_from_config, get_spotlight_tickers_from_config
+from src.services.database import (
+    create_medallion_schema, 
+    run_silver_and_gold_views, 
+    update_risk_inference, 
+    update_silver_risk_features, 
+    update_risk_metrics, 
+    get_universe_tickers_from_config, 
+    get_spotlight_tickers_from_config
+)
 from src.services.maintenance import archive_old_data
-from src.setup_db import create_medallion_schema
+# from src.setup_db import create_medallion_schema
 from src.app_visualizer import plot_stock_risk, plot_stock_risk_with_panic, plot_correlation_heatmap
 from src.utils.config import DATABASE_PATH, REPORT_DIR
 from src.services.reporting import ReportGenerator
@@ -40,7 +48,6 @@ def main():
     if 1==1:
         print("Initializing database schema in Docker mode...")
         create_medallion_schema(initial_setup=True)
-        run_silver_and_gold_views()
     
     # 2. Ingest Raw Data (Sourcing from tickers.yml inside the module)
     ingestor = DataIngestor()

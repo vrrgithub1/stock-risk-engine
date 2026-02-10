@@ -439,15 +439,15 @@ class ReportGenerator:
 
         self.save_report(fig, "risk_performance_report")
 
-
-print("Report Generator module loaded successfully. Ready to generate reports!")
-repgen = ReportGenerator()
-repgen.set_byebass_validate(True)  # Bypass validation for testing purposes
-repgen.plot_stock_risk("NVDA")
-repgen.plot_stock_risk_with_panic("NVDA")   
-repgen.plot_correlation_heatmap()
-repgen.plot_beta_drift_forecast_report()
-repgen.plot_risk_performance_report()
+if __name__ == "__main__":
+    print("Report Generator module loaded successfully. Ready to generate reports!")
+#    repgen = ReportGenerator()
+#    repgen.set_byebass_validate(True)  # Bypass validation for testing purposes
+#    repgen.plot_stock_risk("NVDA")
+#    repgen.plot_stock_risk_with_panic("NVDA")   
+#    repgen.plot_correlation_heatmap()
+#    repgen.plot_beta_drift_forecast_report()
+#    repgen.plot_risk_performance_report()
 
 #    plot_stock_risk("NVDA")
 #    plot_stock_risk_with_panic("NVDA")
