@@ -40,6 +40,7 @@ def main():
     if docker_mode:
         print("Initializing database schema in Docker mode...")
         create_medallion_schema(initial_setup=True)
+        run_silver_and_gold_views()
     
     # 2. Ingest Raw Data (Sourcing from tickers.yml inside the module)
     ingestor = DataIngestor()
