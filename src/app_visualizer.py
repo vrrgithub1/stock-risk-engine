@@ -9,7 +9,7 @@ import math
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
-from src.config import DATABASE_PATH, REPORT_DIR
+from src.utils.config import DATABASE_PATH, REPORT_DIR
 import os
 from datetime import datetime
 

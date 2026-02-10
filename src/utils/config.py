@@ -7,7 +7,7 @@ from pathlib import Path
 
 # Define the base directory of the application
 #BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Data Paths

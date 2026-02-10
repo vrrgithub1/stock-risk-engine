@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 import yaml
 import os
-from src.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
+from src.utils.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
 
 TICKERS_YAML_PATH = TICKERS_YAML_PATH
 DATABASE_PATH = DATABASE_PATH

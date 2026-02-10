@@ -3,17 +3,25 @@ Main entry point for the Stock Risk Engine pipeline.
 """
 
 # main.py
-from src.ingestion import DataIngestor
-from src.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics, get_universe_tickers_from_config, get_spotlight_tickers_from_config
-from src.maintenance import archive_old_data
+from src.services.ingestion import DataIngestor
+from src.services.database import create_medallion_schema, run_silver_and_gold_views, update_risk_inference, update_silver_risk_features, update_risk_metrics, get_universe_tickers_from_config, get_spotlight_tickers_from_config
+from src.services.maintenance import archive_old_data
 from src.setup_db import create_medallion_schema
 from src.app_visualizer import plot_stock_risk, plot_stock_risk_with_panic, plot_correlation_heatmap
-from src.config import DATABASE_PATH, REPORT_DIR
-from src.app_visualizer2 import run_beta_drift_forecast_report
-from src.app_visualizer3 import run_risk_performance_report
+from src.utils.config import DATABASE_PATH, REPORT_DIR
+from src.services.reporting import ReportGenerator
+
+
+#from src.app_visualizer2 import run_beta_drift_forecast_report
+#from src.app_visualizer3 import run_risk_performance_report
+import sys
 import os
+from pathlib import Path
 import yaml
 import argparse
+
+# This ensures the 'src' directory is in the python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def main():
 
@@ -55,6 +63,8 @@ def main():
     print("--- Pipeline Complete ---")
 
     # 8. Generate Visual Reports
+    repgen = ReportGenerator()
+    repgen.set_byebass_validate(True)  # Bypass validation for testing purposes
 
     tickers = get_universe_tickers_from_config()  # Access the tickers list stored during ingestion
     print(f"Generating reports for tickers: {tickers}")
@@ -64,16 +74,12 @@ def main():
             continue
         else:
             print(f"Generating report for {ticker}...")
-            plot_stock_risk(ticker)
-            plot_stock_risk_with_panic(ticker)
+            repgen.plot_stock_risk(ticker)
+            repgen.plot_stock_risk_with_panic(ticker)
 
-    plot_correlation_heatmap()
-
-    spotlight_tickers = get_spotlight_tickers_from_config()
-    print(f"Generating detailed reports for spotlight tickers: {spotlight_tickers}")    
-
-    run_beta_drift_forecast_report(tickers=spotlight_tickers)
-    run_risk_performance_report()
+    repgen.plot_correlation_heatmap()
+    repgen.plot_beta_drift_forecast_report()
+    repgen.plot_risk_performance_report()
 
 if __name__ == "__main__":
     main()

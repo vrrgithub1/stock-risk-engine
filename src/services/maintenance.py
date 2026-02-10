@@ -4,7 +4,7 @@ Maintenance module for archiving old data from the Bronze layer to Historical st
 
 import sqlite3
 from datetime import datetime, timedelta
-from src.config import DATABASE_PATH
+from src.utils.config import DATABASE_PATH
 
 def archive_old_data(days_to_keep=1095, db_path=DATABASE_PATH):
     """

@@ -4,10 +4,10 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
-from src.config import DATABASE_PATH, REPORT_DIR
+from src.utils.config import DATABASE_PATH, REPORT_DIR
 from datetime import datetime
 import sqlite3
-from src.database import get_spotlight_tickers_from_config, get_universe_tickers_from_config
+from src.services.database import get_spotlight_tickers_from_config, get_universe_tickers_from_config
 
 def save_report(fig, ticker):
     timestamp = datetime.now().strftime("%Y-%m-%d")

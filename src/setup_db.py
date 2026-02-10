@@ -4,7 +4,7 @@ Database setup module for creating the Medallion Schema (Bronze, Silver, Gold la
 
 import sqlite3
 import logging
-from src.config import DATABASE_PATH
+from src.utils.config import DATABASE_PATH
 
 # Configure logging for an audit trail
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

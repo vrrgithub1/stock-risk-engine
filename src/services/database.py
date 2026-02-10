@@ -7,7 +7,7 @@ import math
 from turtle import pd
 
 import yaml
-from src.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
+from src.utils.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
 
 def safe_sqrt(x):
     if x is None or x < 0:
@@ -301,7 +301,7 @@ def update_risk_inference(db_path=DATABASE_PATH):
     import pandas as pd
     import numpy as np
     from sklearn.ensemble import RandomForestRegressor
-    from src.config import DATABASE_PATH
+    from src.utils.config import DATABASE_PATH
     import sqlite3
 
     # Connect to the SQLite database
