@@ -37,7 +37,7 @@ def main():
     print(f"Running in {'Docker' if docker_mode else 'Local'} mode.")
 
     # 1. Initialize the database schema
-    if docker_mode:
+    if 1==1:
         print("Initializing database schema in Docker mode...")
         create_medallion_schema(initial_setup=True)
         run_silver_and_gold_views()
