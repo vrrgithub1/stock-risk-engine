@@ -4,10 +4,13 @@ Database initialization and schema creation for the medallion architecture.
 import sqlite3
 import logging
 import math
-from turtle import pd
+import pandas as pd
+import numpy as np
+#from turtle import pd
 
 import yaml
 from src.utils.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
+from src.core.var_engine import VarEngine
 
 def safe_sqrt(x):
     if x is None or x < 0:
@@ -331,9 +334,19 @@ def update_risk_inference(db_path=DATABASE_PATH):
     conn.create_function("LOG", 1, safe_log)
     conn.create_function("EXP", 1, safe_exp)    
 
-    # 1. Load your Model Feature Store Data
-    df = pd.read_sql("SELECT * FROM silver_risk_features", conn)
+    # 1. Load Data with safety check
+    try:
+        df = pd.read_sql("SELECT * FROM silver_risk_features", conn)
+    except Exception as e:
+        print(f"⚠️ Skipping Inference: Table 'silver_risk_features' not ready. {e}")
+        conn.close()
+        return
 
+    if df.empty:
+        print("⚠️ Skipping Risk Inference: No data found in silver_risk_features.")
+        conn.close()
+        return
+    
     # 2. Split into Training (Known Outcomes) and Inference (The 46 NULLs)
     train_df = df[df['target_beta_drift_5d'].notnull()].copy()
     inference_df = df[df['target_beta_drift_5d'].isnull()].copy()
@@ -353,32 +366,23 @@ def update_risk_inference(db_path=DATABASE_PATH):
     
     model.fit(X_train, y_train)
 
-    # 5. Predict the "NULL" values (The 46 rows)
-    inference_df['predicted_beta_drift_5d'] = model.predict(inference_df[features])
+    if not inference_df.empty:
+            inference_df['predicted_beta_drift_5d'] = model.predict(inference_df[features])
+            
+            # Prepare Audit Table Data
+            audit_df = inference_df[['ticker', 'date', 'feat_rolling_beta_130d', 'predicted_beta_drift_5d']].copy()
+            audit_df['predicted_beta_final'] = audit_df['feat_rolling_beta_130d'] + audit_df['predicted_beta_drift_5d']
+            audit_df['model_version'] = 'RF_v1.0_202602'
+            audit_df['prediction_timestamp'] = pd.Timestamp.now()
+            
+            audit_df.columns = ['ticker', 'forecast_date', 'base_beta_130d', 'predicted_drift', 
+                                'predicted_beta_final', 'model_version', 'prediction_timestamp']
 
-    # 6. Get Feature Importance
-    importance = pd.DataFrame({
-        'Feature': features,
-        'Importance': model.feature_importances_
-    }).sort_values(by='Importance', ascending=False)
+            audit_df.to_sql('gold_risk_inference', con=conn, if_exists='append', index=False)
+            print(f"✅ Successfully preserved {len(audit_df)} predictions in Gold Layer.")
 
-    print("✅ Model Trained and Inference Completed!")
-    print(importance)
-
-    # 2. Map your inference results to the audit schema
-    # We add the metadata for the audit trail
-    audit_df = inference_df[['ticker', 'date', 'feat_rolling_beta_130d', 'predicted_beta_drift_5d']].copy()
-    audit_df['predicted_beta_final'] = audit_df['feat_rolling_beta_130d'] + audit_df['predicted_beta_drift_5d']
-    audit_df['model_version'] = 'RF_v1.0_202601'
-    audit_df['prediction_timestamp'] = pd.Timestamp.now()
-
-    # 3. Rename columns to match the SQL table structure we defined
-    audit_df.columns = ['ticker', 'forecast_date', 'base_beta_130d', 'predicted_drift', 
-                        'predicted_beta_final', 'model_version', 'prediction_timestamp']
-
-    # 4. Push to SQL
-    audit_df.to_sql('gold_risk_inference', con=conn, if_exists='append', index=False)
-    print("46 Predictions successfully preserved in the Audit Table.")
+    conn.commit()
+    #conn.close()    
     
     # 5. Update the 'actual_beta_realized' by joining with your Gold/Fact table
     # This logic assumes you have a 'fact_stock_metrics' table with the real data
@@ -417,6 +421,83 @@ def update_risk_inference(db_path=DATABASE_PATH):
     conn.close()
 
 
+def get_ticker_var_risk_summary(ticker, db_path=DATABASE_PATH, trading_days=252, confidence_level=0.95):
+    """
+    Generates a textual summary of the stock's risk profile based on VaR calculations.
+        - Historical VaR: Based on actual past returns
+        - Parametric VaR: Based on mean and volatility assuming normal distribution
+        - Output: A formatted string summary that can be included in reports or dashboards
+    """
+    if db_path is None:
+        db_path = DATABASE_PATH
+    ticker = str(ticker).upper()
+    trading_days = int(trading_days)
+    confidence_level = float(confidence_level)
+
+    print(f"Connecting to database at {db_path} to calculate VaR for {ticker}...")
+
+    conn = sqlite3.connect(db_path)
+    
+    # 1. Pull the last 252 trading days of returns for the specified ticker
+    sql_query = f"""
+        SELECT 
+            r.date, 
+            r.daily_return
+        FROM silver_clean_returns r
+        WHERE r.ticker = ? 
+        ORDER BY r.date DESC
+        LIMIT ?
+        """
+    print("Query = " + sql_query)
+
+    try:
+        # Pass the variables as a tuple in the second argument
+        import pandas as pd
+        df = pd.read_sql_query(sql_query, conn, params=(ticker, trading_days,))
+        
+        if df.empty:
+            print(f"⚠️ No data found for {ticker}")
+            return None
+            
+        returns = df.set_index('date')['daily_return'].dropna().values
+        
+        # ... your VaR calculation logic ...
+        
+    finally:
+        conn.close()
+
+#        df = pd.read_sql(query, conn)
+#        returns = df.set_index('date')['daily_return'].dropna().values
+#        conn.close()
+
+    var_engine = VarEngine(confidence_level=confidence_level)   
+    historical_var = var_engine.calculate_historical_var(returns) 
+    parametric_var = var_engine.calculate_parametric_var(returns) 
+    monte_carlo_var = var_engine.calculate_monte_carlo_var(returns) 
+    display_text = f"95% Daily VaR: {abs(historical_var)*100:.2f}% (Historical)"
+
+#        conn = sqlite3.connect(db_path)
+
+#        insert_query = '''
+#            INSERT INTO gold_risk_var_summary (ticker, historical_var, parametric_var, monte_carlo_var, display_text)
+#            VALUES (?, ?, ?, ?, ?);
+#        '''      
+#        conn.execute(insert_query, (ticker, historical_var, parametric_var, monte_carlo_var, display_text))  
+
+#        conn.commit()
+#        conn.close()
+
+    return {
+        "ticker": ticker,
+        "historical_var": round(float(historical_var), 4),
+        "parametric_var": round(float(parametric_var), 4),
+        "monte_carlo_var": round(float(monte_carlo_var), 4),
+        'display_text': display_text
+    }
+
+
 
 if __name__ == "__main__":
-    create_medallion_schema(initial_setup=False)
+#    create_medallion_schema(initial_setup=False)
+    var_sum = get_ticker_var_risk_summary(ticker="NVDA")
+    print(var_sum)

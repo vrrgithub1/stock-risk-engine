@@ -9,8 +9,8 @@ Author: Venkat Rajadurai
 Date: 2024-06-01
 """
 
-import sqlite3
 import pandas as pd
+import sqlite3
 import math
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -23,6 +23,8 @@ from src.core.var_engine import VarEngine
 import os
 from datetime import datetime
 
+DATABASE_PATH = DATABASE_PATH
+REPORT_DIR = REPORT_DIR
 class ReportGenerator:
     def __init__(self, db_path=DATABASE_PATH):
         self.db_path = db_path
@@ -448,21 +450,38 @@ class ReportGenerator:
          - Output: A formatted string summary that can be included in reports or dashboards
         """
 
+        # db_path = self.db_path
+        print(f"Calculating VaR summary for {ticker} using database at: {self.db_path}")
         conn = sqlite3.connect(self.db_path)
         
-        # 1. Updated Query to include VIX data
-        query = f"""
-        SELECT 
-            r.date, 
-            r.daily_return
-        FROM silver_clean_returns r
-        WHERE r.ticker = '{ticker}' 
-        ORDER BY r.date DESC
-        LIMIT {trading_days}  -- Last 252 trading days (~1 year)
-        """
-        df = pd.read_sql(query, conn)
-        returns = df.set_index('date')['daily_return'].dropna().values
-        conn.close()
+        # 1. Pull the last 252 trading days of returns for the specified ticker
+        query = """
+            SELECT 
+                r.date, 
+                r.daily_return
+            FROM silver_returns r
+            WHERE r.ticker = ? 
+            ORDER BY r.date DESC
+            LIMIT ?
+            """
+        try:
+            # Pass the variables as a tuple in the second argument
+            df = pd.read_sql(query, conn, params=(ticker, trading_days))
+            
+            if df.empty:
+                print(f"⚠️ No data found for {ticker}")
+                return None
+                
+            returns = df.set_index('date')['daily_return'].dropna().values
+            
+            # ... your VaR calculation logic ...
+            
+        finally:
+            conn.close()
+
+#        df = pd.read_sql(query, conn)
+#        returns = df.set_index('date')['daily_return'].dropna().values
+#        conn.close()
 
         var_engine = VarEngine(confidence_level=confidence_level)   
         historical_var = var_engine.calculate_historical_var(returns) 
@@ -486,11 +505,15 @@ class ReportGenerator:
             "historical_var": round(float(historical_var), 4),
             "parametric_var": round(float(parametric_var), 4),
             "monte_carlo_var": round(float(monte_carlo_var), 4),
-            'display_text': f"95% Daily VaR: {abs(historical_var)*100:.2f}% (Historical)"
+            'display_text': display_text
         }
 
 if __name__ == "__main__":
-    print("Report Generator module loaded successfully. Ready to generate reports!")
+    # Indenting these lines makes them "safe." 
+    # They won't run when main.py imports this file.
+    repgen = ReportGenerator()
+    summary = repgen.get_var_risk_summary("CVX") 
+    print(summary)
 #    repgen = ReportGenerator()
 #    repgen.set_byebass_validate(True)  # Bypass validation for testing purposes
 #    repgen.plot_stock_risk("NVDA")
