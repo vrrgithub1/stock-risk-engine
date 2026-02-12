@@ -43,7 +43,7 @@ The engine now generates a dynamic four-quadrant analysis joining **ML-Predicted
 * 🟡 **Outlier Risk (Low Beta / High VaR):** High idiosyncratic risk despite low market correlation. (e.g., **PG**, **XOM**)
 * 🟢 **Defensive (Low Beta / Low VaR):** Institutional "Safe Havens" with minimized downside. (e.g., **CVX**)
 
-![Risk Matrix](docs/risk_matrix.png) 
+![Risk Matrix](docs/Risk_Matrix.png) 
 
 
 ## 🛠️ Tech Stack
