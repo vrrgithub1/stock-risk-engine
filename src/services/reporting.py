@@ -508,6 +508,71 @@ class ReportGenerator:
             'display_text': display_text
         }
 
+    def plot_risk_summary_matrix(self):
+        conn = sqlite3.connect(self.db_path)
+        
+        # Joining the ML predictions with the VaR calculations
+        query = """
+        SELECT 
+            grrvs.ticker, 
+            grrvs.monte_carlo_var as mc_var, 
+            grri.predicted_beta_final as pred_beta,
+            grri.forecast_date
+        FROM gold_recent_risk_var_summary grrvs 
+        JOIN gold_recent_risk_inference grri ON grrvs.ticker = grri.ticker
+        """
+        
+        df = pd.read_sql(query, conn)
+        conn.close()
+
+        if df.empty:
+                print("⚠️ No data available for Risk Matrix.")
+                return
+
+        # 2. Define Quadrants for "Colorfulness"
+        # We use medians as the crosshair for the quadrants
+        var_mid = df['mc_var'].median()
+        beta_mid = df['pred_beta'].median()
+        
+        def assign_quadrant(row):
+                if row['pred_beta'] > beta_mid and row['mc_var'] > var_mid:
+                    return 'High Beta / High VaR (Aggressive)'
+                elif row['pred_beta'] > beta_mid and row['mc_var'] <= var_mid:
+                    return 'High Beta / Low VaR (Efficient)'
+                elif row['pred_beta'] <= beta_mid and row['mc_var'] > var_mid:
+                    return 'Low Beta / High VaR (Outlier Risk)'
+                else:
+                    return 'Low Beta / Low VaR (Defensive)'
+
+        df['Risk Category'] = df.apply(assign_quadrant, axis=1)
+
+        # 3. Create the Colorful Scatter Plot
+        fig = px.scatter(
+            df, 
+            x="mc_var", 
+            y="pred_beta",
+            text="ticker", 
+            color="Risk Category",  # <--- This adds the colors!
+            title=f"Stock Risk-Reward Matrix ({datetime.now().strftime('%Y-%m-%d')})",
+            labels={'mc_var': '95% Monte Carlo VaR (Downside Risk)', 
+                    'pred_beta': 'Predicted Beta (Market Sensitivity)'},
+            color_discrete_map={
+                'High Beta / High VaR (Aggressive)': '#EF553B', # Red
+                'High Beta / Low VaR (Efficient)': '#636EFA',  # Blue
+                'Low Beta / High VaR (Outlier Risk)': '#FECB52', # Gold
+                'Low Beta / Low VaR (Defensive)': '#00CC96'     # Green
+            },
+            template="plotly_white"
+        )
+
+        # Add crosshair lines for the quadrants
+        fig.add_hline(y=beta_mid, line_dash="dot", line_color="gray", annotation_text="Beta Median")
+        fig.add_vline(x=var_mid, line_dash="dot", line_color="gray", annotation_text="VaR Median")
+
+        fig.update_traces(textposition='top center', marker=dict(size=12, opacity=0.8))
+
+        self.save_report(fig, "risk_summary_matrix")
+    
 if __name__ == "__main__":
     # Indenting these lines makes them "safe." 
     # They won't run when main.py imports this file.

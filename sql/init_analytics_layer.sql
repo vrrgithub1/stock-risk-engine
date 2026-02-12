@@ -200,6 +200,52 @@ SELECT
 FROM silver_stock_prices ssp 
 WHERE ssp.volume IS NOT NULL 
 ;
+
+DROP VIEW IF EXISTS gold_recent_risk_inference;
+
+CREATE VIEW gold_recent_risk_inference
+AS
+SELECT 
+   gri3.ticker 
+  ,gri3.forecast_date 
+  ,gri3.prediction_id 
+  ,gri3.prediction_timestamp 
+  ,gri3.base_beta_130d 
+  ,gri3.predicted_drift 
+  ,gri3.predicted_beta_final 
+  ,gri3.model_version 
+  ,gri3.actual_beta_realized 
+  ,gri3.prediction_error 
+FROM 
+(
+SELECT gri.*, ROW_NUMBER() OVER (PARTITION BY gri.ticker ORDER BY gri.prediction_id DESC) as RN 
+FROM gold_risk_inference gri 
+WHERE gri.forecast_date = (SELECT MAX(gri2.forecast_date) FROM gold_risk_inference gri2 )
+) gri3 
+WHERE gri3.RN = 1
+;
+
+DROP VIEW IF EXISTS gold_recent_risk_var_summary;
+
+CREATE VIEW gold_recent_risk_var_summary 
+AS
+SELECT 
+	grvs3.ticker,
+	grvs3."timestamp",
+	grvs3.historical_Var,
+	grvs3.parametric_var,
+	grvs3.monte_carlo_var,
+	grvs3.display_text
+FROM
+(
+SELECT grvs.*, ROW_NUMBER() OVER (PARTITION BY grvs.ticker ORDER BY grvs."timestamp" DESC ) AS RN
+FROM gold_risk_var_summary grvs 
+WHERE STRFTIME('%Y%m%d', grvs."timestamp") = (SELECT MAX(STRFTIME('%Y%m%d', grvs2."timestamp")) FROM gold_risk_var_summary grvs2 )
+) grvs3 
+WHERE grvs3.RN = 1
+;
+
+
 -- ====================================================================
 -- END OF FILE
 -- ====================================================================

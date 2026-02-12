@@ -88,18 +88,14 @@ def main():
             print(f"Generating report for {ticker}...")
             repgen.plot_stock_risk(ticker)
             repgen.plot_stock_risk_with_panic(ticker)
+            var_summary = repgen.get_var_risk_summary(ticker)
+            print(f"VaR Summary for {ticker}: {var_summary}")
 
     repgen.plot_correlation_heatmap()
     repgen.plot_beta_drift_forecast_report()
     repgen.plot_risk_performance_report()
-
-    for ticker in tickers:
-            if ticker.startswith("^"):  # Skip indices for individual stock reports
-                continue
-            else:
-                print(f"Generating report for {ticker}...")
-                var_summary = repgen.get_var_risk_summary(ticker)  # This will print the VaR summary to console
-                print(f"VaR Summary for {ticker}: {var_summary}")
+    repgen.plot_risk_summary_matrix()
+    print("All reports generated and saved to disk.")
 
 if __name__ == "__main__":
     main()
