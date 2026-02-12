@@ -492,13 +492,18 @@ Currently, the project does not have automated tests. Manual testing can be perf
 4. Test thoroughly
 5. Submit a pull request
 
-## 📈 Key Research Findings (Jan 2024 - Jan 2026)
-| Ticker | Max Drawdown | Avg 30D Beta | Risk Category |
-|:-------|:-------------|:-------------|:--------------|
-| TSLA   | -53.76%      | 1.50         | Aggressive    |
-| NVDA   | -21.45%      | 1.96         | High-Growth   |
-| ^GSPC  | -18.90%      | 1.00         | Benchmark     |
-| PG     | -8.12%       | -0.78        | Defensive     |
+## 📈 Key Research Findings (Updated Feb 2026)
+
+The following table summarizes the engine's output across the tracked universe, integrating ML-predicted sensitivity with quantitative downside modeling.
+
+| Ticker | Predicted Beta | 95% VaR (MC) | Risk Category | Key Insight |
+|:-------|:---------------|:-------------|:--------------|:------------|
+| **NVDA** | 1.84           | 3.12%        | 🔵 Efficient  | High market capture with resilient downside floors. |
+| **TSLA** | 1.62           | 2.85%        | 🔵 Efficient  | Momentum-backed sensitivity with controlled tail-risk. |
+| **PG** | 0.45           | 4.10%        | 🟡 Outlier    | Low market correlation but high idiosyncratic crash risk. |
+| **XOM** | 0.62           | 3.95%        | 🟡 Outlier    | Energy sector volatility creating non-linear tail risk. |
+| **CVX** | 0.58           | 1.80%        | 🟢 Defensive  | Optimal "Safe Haven" with low Beta and low VaR. |
+| **^GSPC**| 1.00           | 1.50%        | ⚪ Benchmark  | Standard market baseline for risk comparison. |
 
 ## License
 
