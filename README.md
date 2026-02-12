@@ -321,7 +321,7 @@ erDiagram
     bronze_price_history {
         INTEGER id PK
         TEXT ticker
-        DATE trade_date
+        DATE date
         REAL open
         REAL high
         REAL low
@@ -331,71 +331,114 @@ erDiagram
         TIMESTAMP ingested_at
     }
 
-    bronze_macro_indicators {
-        INTEGER id PK
-        TEXT indicator
+    silver_price_history_clean {
         DATE date
-        REAL value
-        TIMESTAMP ingested_at
-    }
-
-    silver_price_history {
-        INTEGER id PK
         TEXT ticker
-        DATE trade_date
         REAL adj_close
-        REAL return_1d
+        INTEGER volume
     }
 
     silver_returns {
-        INTEGER id PK
-        INTEGER price_history_id FK
+        DATE date
         TEXT ticker
-        DATE trade_date
-        REAL return_1d
+        REAL adj_close
+        REAL daily_return
     }
 
     silver_rolling_volatility {
-        INTEGER id PK
+        DATE date
         TEXT ticker
-        DATE calculation_date
-        INTEGER window_days
-        REAL volatility
+        REAL annualized_volatility_30d
     }
 
     gold_rolling_beta_30d {
-        INTEGER id PK
+        DATE date
         TEXT ticker
-        DATE calculation_date
         REAL beta_30d
     }
 
-    gold_max_drawdown {
-        INTEGER id PK
+    gold_beta_30d_drift_5d {
+        DATE date
         TEXT ticker
-        DATE peak_date
-        DATE trough_date
-        REAL max_drawdown
+        REAL beta_30d
+        REAL beta_30d_5d_ahead
+        REAL beta_30d_drift_5d
+    }
+
+    gold_cum_return_5d {
+        DATE date
+        TEXT ticker
+        REAL daily_return
+        REAL cumulative_return_5d
+    }
+
+    gold_market_regime_vix {
+        DATE date
+        REAL adj_close
+        INTEGER market_regime_vix
+    }
+
+    gold_max_drawdown {
+        TEXT ticker
+        REAL max_drawdown_pct
+        REAL cycle_high
+        REAL cycle_low
+    }
+
+    silver_risk_features {
+        TEXT ticker PK
+        DATE date PK
+        REAL feat_rolling_vol_30d
+        REAL feat_rolling_beta_130d
+        REAL feat_cumulative_return_5d
+        REAL feat_market_regime_vix
+        REAL target_beta_drift_5d
     }
 
     gold_risk_metrics {
-        INTEGER id PK
-        TEXT ticker
-        DATE calculation_date
-        TEXT metric_type
-        INTEGER period_days
-        REAL value
+        TEXT ticker PK
+        DATE date PK
+        REAL actual_beta_130d
+        REAL actual_vol_30d
+        REAL actual_return_5d
+        INTEGER vix_regime
     }
 
-    silver_price_history ||--|| bronze_price_history : "derived_from"
-    silver_returns ||--|| silver_price_history : "derived_from"
+    gold_risk_inference {
+        INTEGER prediction_id PK
+        TIMESTAMP prediction_timestamp
+        TEXT ticker
+        DATE forecast_date
+        REAL base_beta_130d
+        REAL predicted_drift
+        REAL predicted_beta_final
+        TEXT model_version
+        REAL actual_beta_realized
+        REAL prediction_error
+    }
+
+    gold_risk_var_summary {
+        TEXT ticker
+        TIMESTAMP timestamp
+        REAL historical_var
+        REAL parametric_var
+        REAL monte_carlo_var
+    }
+
+    silver_price_history_clean ||--|| bronze_price_history : "derived_from"
+    silver_returns ||--|| silver_price_history_clean : "derived_from"
     silver_rolling_volatility ||--|| silver_returns : "derived_from"
     gold_rolling_beta_30d ||--|| silver_returns : "derived_from"
-    gold_max_drawdown ||--|| silver_price_history : "derived_from"
-    gold_risk_metrics ||--o| gold_rolling_beta_30d : "populates"
-    gold_risk_metrics ||--o| gold_max_drawdown : "populates"
-    gold_risk_metrics ||--o| silver_rolling_volatility : "populates"
-    bronze_macro_indicators ||--o| silver_rolling_volatility : "used_by"
+    gold_beta_30d_drift_5d ||--|| gold_rolling_beta_30d : "derived_from"
+    gold_cum_return_5d ||--|| silver_returns : "derived_from"
+    gold_market_regime_vix ||--|| silver_returns : "derived_from (VIX)"
+    silver_risk_features ||--o| silver_rolling_volatility : "joins"
+    silver_risk_features ||--o| gold_rolling_beta_30d : "joins"
+    silver_risk_features ||--o| gold_cum_return_5d : "joins"
+    silver_risk_features ||--o| gold_market_regime_vix : "joins"
+    gold_risk_metrics ||--o| silver_risk_features : "populates"
+    gold_risk_inference ||--o| gold_rolling_beta_30d : "evaluates_with"
+    gold_risk_var_summary ||--o| gold_risk_metrics : "summarizes"
 ```
 
 ## Data Dictionary
@@ -405,6 +448,7 @@ erDiagram
 #### Table: bronze_price_history
 | Column | Data Type | Description |
 |:--------|:----------|:------------|
+| id | INTEGER | Auto-incremented unique record identifier (Primary Key) |
 | ticker | TEXT | Company ticker symbol |
 | date | TEXT | Business or stock trade date (YYYY-MM-DD) |
 | open | REAL | Opening trade price for the day |
@@ -413,14 +457,22 @@ erDiagram
 | close | REAL | Closing trade price for the day |
 | adj_close | REAL | Adjusted closing trade price for the day |
 | volume | INTEGER | Trade volume for the day |
+| ingested_at | TIMESTAMP | Timestamp when the record was ingested into the system |
 
-#### Table: bronze_macro_indicators
+#### Table: bronze_historical_price_archive
 | Column | Data Type | Description |
 |:--------|:----------|:------------|
-| indicator | TEXT | Macro indicator symbol (e.g., ^VIX, ^TNX, ^IRX) |
-| date | TEXT | Date of the indicator value (YYYY-MM-DD) |
-| value | REAL | The numeric value of the macro indicator |
-| ingested_at | TIMESTAMP | Timestamp when the record was ingested into the system |
+| id | INTEGER | Auto-incremented unique record identifier (Primary Key) |
+| ticker | TEXT | Company ticker symbol |
+| date | TEXT | Business or stock trade date (YYYY-MM-DD) |
+| open | REAL | Opening trade price for the day |
+| high | REAL | Maximum trade price for the day |
+| low | REAL | Minimum trade price for the day |
+| close | REAL | Closing trade price for the day |
+| adj_close | REAL | Adjusted closing trade price for the day |
+| volume | INTEGER | Trade volume for the day |
+| archival_date | TIMESTAMP | Date when the record was moved to the archive |
+| ingested_at | TIMESTAMP | Timestamp when the record was originally ingested into the system |
 
 ### Silver Layer Tables
 
@@ -438,6 +490,17 @@ erDiagram
 | calculation_date | TEXT | Date when the volatility was calculated (YYYY-MM-DD) |
 | window_days | INTEGER | The rolling window size in days used for volatility calculation |
 | volatility | REAL | The annualized rolling volatility for the specified window |
+
+#### Table: silver_risk_features
+| Column | Data Type | Description |
+|:--------|:----------|:------------|
+| ticker | TEXT | Company ticker symbol (Composite Primary Key) |
+| date | DATE | Business or stock trade date (Composite Primary Key) |
+| feat_rolling_vol_30d | REAL | 30-day rolling annualized volatility feature (input to ML model) |
+| feat_rolling_beta_130d | REAL | 130-day rolling market beta feature (input to ML model) |
+| feat_cumulative_return_5d | REAL | 5-day cumulative return feature (input to ML model) |
+| feat_market_regime_vix | REAL | Market regime classification based on VIX levels (input to ML model) |
+| target_beta_drift_5d | REAL | 5-day forward beta drift (target variable for ML model; NULL for inference dates) |
 
 ### Gold Layer Tables
 
@@ -464,6 +527,30 @@ erDiagram
 | metric_type | TEXT | Type of risk metric (e.g., 'volatility', 'beta') |
 | period_years | INTEGER | Lookback period in years |
 | value | REAL | Calculated metric value |
+
+#### Table: gold_risk_inference
+| Column | Data Type | Description |
+|:--------|:----------|:------------|
+| prediction_id | INTEGER | Auto-incremented unique prediction identifier (Primary Key) |
+| prediction_timestamp | TIMESTAMP | Timestamp when the prediction was generated |
+| ticker | TEXT | Company ticker symbol |
+| forecast_date | DATE | Date for which the beta drift prediction was made |
+| base_beta_130d | REAL | 130-day rolling beta used as the baseline for the prediction |
+| predicted_drift | REAL | ML-predicted 5-day forward beta drift value |
+| predicted_beta_final | REAL | Final predicted beta (base_beta_130d + predicted_drift) |
+| model_version | TEXT | Version identifier of the Random Forest model used for prediction |
+| actual_beta_realized | REAL | Actual realized beta on the forecast_date + 5 business days (NULL if not yet realized) |
+| prediction_error | REAL | Difference between actual and predicted beta (actual - predicted) |
+
+#### Table: gold_risk_var_summary
+| Column | Data Type | Description |
+|:--------|:----------|:------------|
+| ticker | TEXT | Company ticker symbol (Composite Primary Key) |
+| timestamp | TIMESTAMP | Timestamp of the VaR calculation (Composite Primary Key) |
+| historical_var | REAL | Historical simulation VaR at 95% confidence level (one-day loss percentage) |
+| parametric_var | REAL | Parametric (Variance-Covariance) VaR at 95% confidence level (one-day loss percentage) |
+| monte_carlo_var | REAL | Monte Carlo simulation VaR at 95% confidence level (one-day loss percentage) |
+| display_text | TEXT | Formatted text summary of VaR results for reporting/visualization |
 
 ## Configuration
 
