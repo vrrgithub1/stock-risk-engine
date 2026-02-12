@@ -14,14 +14,9 @@ from src.services.database import (
     get_spotlight_tickers_from_config
 )
 from src.services.maintenance import archive_old_data
-# from src.setup_db import create_medallion_schema
-from src.app_visualizer import plot_stock_risk, plot_stock_risk_with_panic, plot_correlation_heatmap
 from src.utils.config import DATABASE_PATH, REPORT_DIR
 from src.services.reporting import ReportGenerator
 
-
-#from src.app_visualizer2 import run_beta_drift_forecast_report
-#from src.app_visualizer3 import run_risk_performance_report
 import sys
 import os
 from pathlib import Path
