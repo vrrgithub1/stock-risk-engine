@@ -510,6 +510,9 @@ class ReportGenerator:
 
     def plot_risk_summary_matrix(self):
         conn = sqlite3.connect(self.db_path)
+        universal_tickers = get_universe_tickers_from_config()
+        univ_tickers_tuper = tuple(universal_tickers)  # Convert list to tuple for SQL IN clause
+        print (f"Generating Risk Summary Matrix for tickers: {universal_tickers}")
         
         # Joining the ML predictions with the VaR calculations
         query = """
@@ -520,7 +523,9 @@ class ReportGenerator:
             grri.forecast_date
         FROM gold_recent_risk_var_summary grrvs 
         JOIN gold_recent_risk_inference grri ON grrvs.ticker = grri.ticker
+        WHERE grrvs.ticker IN {}
         """
+        query = query.format(univ_tickers_tuper)
         
         df = pd.read_sql(query, conn)
         conn.close()
@@ -553,9 +558,9 @@ class ReportGenerator:
             y="pred_beta",
             text="ticker", 
             color="Risk Category",  # <--- This adds the colors!
-            title=f"Stock Risk-Reward Matrix ({datetime.now().strftime('%Y-%m-%d')})",
-            labels={'mc_var': '95% Monte Carlo VaR (Downside Risk)', 
-                    'pred_beta': 'Predicted Beta (Market Sensitivity)'},
+            title=f"<b>Stock Risk-Reward Matrix ({datetime.now().strftime('%Y-%m-%d')})</b>",
+            labels={'mc_var': '<b>95% Monte Carlo VaR (Downside Risk)</b>', 
+                    'pred_beta': '<b>Predicted Beta (Market Sensitivity)</b>'},
             color_discrete_map={
                 'High Beta / High VaR (Aggressive)': '#EF553B', # Red
                 'High Beta / Low VaR (Efficient)': '#636EFA',  # Blue
@@ -566,10 +571,23 @@ class ReportGenerator:
         )
 
         # Add crosshair lines for the quadrants
-        fig.add_hline(y=beta_mid, line_dash="dot", line_color="gray", annotation_text="Beta Median")
-        fig.add_vline(x=var_mid, line_dash="dot", line_color="gray", annotation_text="VaR Median")
+        fig.add_hline(y=beta_mid, line_dash="dot", line_color="dimgray", annotation_text="<b>Beta Median</b>")
+        fig.add_vline(x=var_mid, line_dash="dot", line_color="dimgray", annotation_text="<b>VaR Median</b>")
 
         fig.update_traces(textposition='top center', marker=dict(size=12, opacity=0.8))
+        fig.update_layout(
+            legend_title_font=dict(weight="bold"),
+            legend_font=dict(weight="bold"),
+            xaxis=dict(
+                title_font=dict(weight="bold"),
+            ),
+            yaxis=dict(
+                title_font=dict(weight="bold"),
+            )
+        )
+
+        fig.update_xaxes(title_font=dict(weight="bold"))
+        fig.update_yaxes(title_font=dict(weight="bold"))
 
         self.save_report(fig, "risk_summary_matrix")
     
