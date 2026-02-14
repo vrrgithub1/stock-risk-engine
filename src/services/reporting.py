@@ -22,6 +22,11 @@ from src.services.database import get_spotlight_tickers_from_config, get_univers
 from src.core.var_engine import VarEngine
 import os
 from datetime import datetime
+import logging
+
+# Setup logging for the ingestion pipeline
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 DATABASE_PATH = DATABASE_PATH
 REPORT_DIR = REPORT_DIR
@@ -55,23 +60,26 @@ class ReportGenerator:
             return "Stress (High Risk/Panic)"
     
     def save_report(self, fig, ticker):
+        logger.info(f"Saving report for {ticker} to HTML file.")
         timestamp = datetime.now().strftime("%Y-%m-%d")
         # Use the path from config
         file_path = REPORT_DIR / f"risk_report_{ticker}_{timestamp}.html"
         
         fig.write_html(str(file_path))
-        print(f"Report successfully archived at: {file_path}")
+        logger.info(f"Report successfully archived at: {file_path}")
 
     def plot_stock_risk(self, ticker):
         """
         Plot Stock Risk Dashboard with Price and Rolling Beta
         1. Load Data from your Gold and Silver Views
         2. Create an Interactive Dashboard with Plotly"""
+        logger.info(f"Generating stock risk dashboard for {ticker}.")
         conn = sqlite3.connect(self.db_path)
 
         conn.create_function("SQRT", 1, self.safe_sqrt)
         conn.create_function("POWER", 2, self.safe_pow)
 
+        logger.info(f"Fetching data for {ticker} from database for risk dashboard.")
         # 1. Load Data from your Gold and Silver Views
         query = f"""
         SELECT v.date, v.annualized_volatility_30d, b.beta_30d, r.adj_close
@@ -83,6 +91,8 @@ class ReportGenerator:
         """
         df = pd.read_sql(query, conn)
         conn.close()
+
+        logger.info(f"Data for {ticker} successfully loaded. Generating dashboard.")
 
         # 2. Create an Interactive Dashboard
         fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -106,6 +116,7 @@ class ReportGenerator:
             hovermode="x unified"
         )
         self.save_report(fig, ticker)
+        logger.info(f"Stock risk dashboard for {ticker} generated and saved successfully.")
     
     def plot_stock_risk_with_panic(self, ticker):
         """
@@ -113,11 +124,13 @@ class ReportGenerator:
         1. Load Data including VIX from your Gold and Silver Views
         2. Create an Interactive Dashboard with Plotly including Panic Overlay where VIX > 20
         """
+        logger.info(f"Generating stock risk dashboard with panic overlay for {ticker}.")
 
         conn = sqlite3.connect(self.db_path)
         conn.create_function("SQRT", 1, self.safe_sqrt)
         conn.create_function("POWER", 2, self.safe_pow)
         
+        logger.info(f"Fetching data for {ticker} including VIX from database for panic overlay dashboard.")
         # 1. Updated Query to include VIX data
         query = f"""
         SELECT 
@@ -136,6 +149,7 @@ class ReportGenerator:
         df = pd.read_sql(query, conn)
         conn.close()
 
+        logger.info(f"Data for {ticker} including VIX successfully loaded. Generating panic overlay dashboard.")
         # 2. Build the Plot
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -168,6 +182,7 @@ class ReportGenerator:
 
         # fig.show()
         self.save_report(fig, f"withPanic_{ticker}")
+        logger.info(f"Stock risk dashboard with panic overlay for {ticker} generated and saved successfully.")
    
     def plot_correlation_heatmap(self):
         """
@@ -176,9 +191,12 @@ class ReportGenerator:
         2. Calculate Correlation Matrix
         3. Create Heatmap using Plotly
         """
+
+        logger.info("Generating correlation heatmap for all tickers based on daily returns.")
             
         conn = sqlite3.connect(self.db_path)
         
+        logger.info("Fetching daily returns data for all tickers from database for correlation heatmap.")
         # 1. Pull daily returns for all tickers in a 'Pivot' format
         # We want dates as rows and Tickers as columns
         query = """
@@ -189,6 +207,7 @@ class ReportGenerator:
         df = pd.read_sql(query, conn)
         conn.close()
 
+        logger.info("Data for correlation heatmap successfully loaded. Calculating correlation matrix and generating heatmap.")
         # 2. Pivot the data so each column is a ticker
         pivot_df = df.pivot(index='date', columns='ticker', values='daily_return')
 
@@ -213,9 +232,12 @@ class ReportGenerator:
 
         # fig.show()
         self.save_report(fig, "correlation_heatmap")
+        logger.info("Correlation heatmap generated and saved successfully.")
 
     def fetch_inference_data(self):
         # Connect to the SQLite database
+
+        logger.info("Fetching inference data from database for model training and prediction.")
         conn = sqlite3.connect(self.db_path)
 
         # 1. Load your Model Feature Store Data
@@ -231,6 +253,7 @@ class ReportGenerator:
         X_train = train_df[features]
         y_train = train_df['target_beta_drift_5d']
 
+        logger.info("Model training data prepared. Starting model training and inference.")
         # 4. Train the Model
         model = RandomForestRegressor(n_estimators=100, random_state=42)
         model.fit(X_train, y_train)
@@ -249,6 +272,7 @@ class ReportGenerator:
         print("✅ Model Trained and Inference Completed!")
         print(importance)
         self.inference_df = inference_df
+        logger.info("Inference data fetched and predictions made successfully.")
         return inference_df
 
     def validate_gold_layer(self):
@@ -256,23 +280,37 @@ class ReportGenerator:
         Quality Gate: Validates data integrity before report generation.
         Returns True if pass, raises ValueError if fail.
         """
-        print("Initalizing Automated PDF Validation...")
+        logger.info("Validating Gold Layer data integrity before report generation.")
 
         if self.inference_df is None:
             self.inference_df = self.fetch_inference_data()
         df = self.inference_df
 
+        logger.info("Performing data integrity checks on Gold Layer inference data.")
         # 1. Null Check (ML Integrity)
         # Ensures the Random Forest actually produced a drift value
-        if df['predicted_beta_drift_5d'].isnull().any():
+
+        failures = df[df['predicted_beta_drift_5d'].isnull()]
+        
+        if not failures.empty:
+            logger.warning(f"VALIDATION FAILED: ML Model produced NULL values in {len(failures)} rows.")
+            logger.warning(f"Failures details: \n{failures[['ticker', 'predicted_beta_drift_5d']]}")
             raise ValueError("VALIDATION FAILED: ML Model produced NULL values. Aborting PDF.")
+
+        logger.info("Null check passed: No NULL values in predicted_beta_drift_5d.")
 
         # 2. Financial Sanity Check (Outlier Detection)
         # If a Beta > 4.0 is detected, it's usually a data error, not a market reality
-        if (df['feat_rolling_beta_130d'] > 4.0).any():
-            print("CRITICAL WARNING: Extreme Beta (>4.0) detected. Check raw price data.")
-            # You can choose to raise an error here or just log it
-            
+        # Identify the failures
+        failures = df[df['feat_rolling_beta_130d'] > 4.0]
+
+        if not failures.empty:
+            logger.warning(f"CRITICAL WARNING: Extreme Beta (>4.0) detected in {len(failures)} rows.")
+            # This prints the ticker, the beta value, and the date (if it's in the index)
+            logger.warning(f"Extreme Beta details: \n{failures[['ticker', 'feat_rolling_beta_130d']]}")            # You can choose to raise an error here or just log it
+
+        logger.info("Financial sanity check completed: No extreme beta values detected.")
+
         # 3. Data Freshness Check (API Sync)
         # Checks if the most recent date in the DB is older than 48 hours
         latest_date = pd.to_datetime(df['date'].max())
@@ -280,7 +318,7 @@ class ReportGenerator:
             # raise ValueError(f"VALIDATION FAILED: Data is stale. Last update: {latest_date}")
             return False
 
-        print("✅ Validation Passed: Data integrity confirmed for Gold Layer.")
+        logger.info("Validation passed: Data integrity confirmed for Gold Layer.")
         return True
 
     def plot_beta_drift_forecast_report(self):
@@ -292,12 +330,16 @@ class ReportGenerator:
         # Below code is for visualization for inference results
         # 1. Run the prediction logic (assuming 'inference_df' is ready)
         # Let's visualize NVDA and TSLA specifically
+        logger.info("Generating Beta Drift Forecast Report for NVDA and TSLA.")
 
         tickers = get_spotlight_tickers_from_config()
         inference_df = self.inference_df if self.inference_df is not None else self.fetch_inference_data()
 
+        logger.info(f"Spotlight tickers for Beta Drift Forecast: {tickers}")
         if not self.validate_gold_layer() and not self.byebass_validate:
             raise ValueError("Validation failed. Cannot generate report.")
+
+        logger.info("Data validation passed. Proceeding to generate Beta Drift Forecast Report.")
 
         fig = go.Figure()
 
@@ -336,15 +378,18 @@ class ReportGenerator:
         )    
 
         self.save_report(fig, "beta_drift_forecast")
+        logger.info("Beta Drift Forecast Report generated and saved successfully.")
 
     def plot_risk_performance_report(self):
         """
         Generates the Phase II Executive Report with Forecasts, Logic, and Market Context.
         
         """
-
+        logger.info("Generating Risk Performance Report with Forecasts, Logic, and Market Context.")    
         spotlight_tickers = get_spotlight_tickers_from_config()
         inference_df = self.inference_df if self.inference_df is not None else self.fetch_inference_data()
+
+        logger.info(f"Spotlight tickers for Risk Performance Report: {spotlight_tickers}")
 
         if not self.validate_gold_layer() and not self.byebass_validate:
             raise ValueError("Validation failed. Cannot generate report.")
@@ -361,6 +406,8 @@ class ReportGenerator:
 
         vix_metadata = {'current_level': current_vix_level, 'regime_label': regime_label}
 
+
+        logger.info(f"VIX Market Regime Metadata: {vix_metadata}")
         # 1. Setup the Subplots
         # Note: col 2, row 2 is 'domain' type to allow the Gauge Chart
         fig = make_subplots(
@@ -441,6 +488,8 @@ class ReportGenerator:
         ) 
 
         self.save_report(fig, "risk_performance_report")
+        logger.info("Risk Performance Report with Forecasts, Logic, and Market Context generated and saved successfully.")  
+
 
     def get_var_risk_summary(self, ticker, trading_days=252, confidence_level=0.95):
         """
@@ -451,7 +500,7 @@ class ReportGenerator:
         """
 
         # db_path = self.db_path
-        print(f"Calculating VaR summary for {ticker} using database at: {self.db_path}")
+        logger.info(f"Calculating VaR summary for {ticker} using database at: {self.db_path}")
         conn = sqlite3.connect(self.db_path)
         
         # 1. Pull the last 252 trading days of returns for the specified ticker
@@ -499,6 +548,7 @@ class ReportGenerator:
 
         conn.commit()
         conn.close()
+        logger.info(f"VaR summary for {ticker} calculated and stored in database successfully.")
 
         return {
             "ticker": ticker,
@@ -509,10 +559,12 @@ class ReportGenerator:
         }
 
     def plot_risk_summary_matrix(self):
+        logger.info("Generating Risk Summary Matrix for all tickers in the universe.")
+
         conn = sqlite3.connect(self.db_path)
         universal_tickers = get_universe_tickers_from_config()
         univ_tickers_tuper = tuple(universal_tickers)  # Convert list to tuple for SQL IN clause
-        print (f"Generating Risk Summary Matrix for tickers: {universal_tickers}")
+        logger.info(f"Generating Risk Summary Matrix for tickers: {universal_tickers}")
         
         # Joining the ML predictions with the VaR calculations
         query = """
@@ -590,6 +642,7 @@ class ReportGenerator:
         fig.update_yaxes(title_font=dict(weight="bold"))
 
         self.save_report(fig, "risk_summary_matrix")
+        logger.info("Risk Summary Matrix generated and saved successfully.")
     
 if __name__ == "__main__":
     # Indenting these lines makes them "safe." 

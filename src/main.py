@@ -23,6 +23,12 @@ from pathlib import Path
 import yaml
 import argparse
 import pandas as pd
+import logging
+
+# Setup logging for the ingestion pipeline
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 # This ensures the 'src' directory is in the python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -33,19 +39,19 @@ def main():
     parser.add_argument("--dockermode", action="store_true", help="Run in Docker mode.")
     args = parser.parse_args()
 
-    print(f"Arguments received: {args.dockermode}") 
+    logger.info(f"Arguments received: {args.dockermode}")
     docker_mode = args.dockermode
 
-    print("--- Starting Stock Risk Engine ---")
+    logger.info("--- Starting Stock Risk Engine ---")
 
-    print(f"Running in {'Docker' if docker_mode else 'Local'} mode.")
+    logger.info(f"Running in {'Docker' if docker_mode else 'Local'} mode.")
 
     # 1. Initialize the database schema
     if docker_mode:
-        print("Initializing database schema in Docker mode...")
+        logger.info("Initializing database schema in Docker mode...")
         create_medallion_schema(initial_setup=True)
     else:
-        print("Initializing database schema in Local mode...")
+        logger.info("Initializing database schema in Local mode...")
         create_medallion_schema(initial_setup=False)
     
     # 2. Ingest Raw Data (Sourcing from tickers.yml inside the module)
@@ -74,23 +80,23 @@ def main():
     repgen.set_byebass_validate(True)  # Bypass validation for testing purposes
 
     tickers = get_universe_tickers_from_config()  # Access the tickers list stored during ingestion
-    print(f"Generating reports for tickers: {tickers}")
+    logger.info(f"Generating reports for tickers: {tickers}")
 
     for ticker in tickers:
         if ticker.startswith("^"):  # Skip indices for individual stock reports
             continue
         else:
-            print(f"Generating report for {ticker}...")
+            logger.info(f"Generating report for {ticker}...")
             repgen.plot_stock_risk(ticker)
             repgen.plot_stock_risk_with_panic(ticker)
             var_summary = repgen.get_var_risk_summary(ticker)
-            print(f"VaR Summary for {ticker}: {var_summary}")
+            logger.info(f"VaR Summary for {ticker}: {var_summary}")
 
     repgen.plot_correlation_heatmap()
     repgen.plot_beta_drift_forecast_report()
     repgen.plot_risk_performance_report()
     repgen.plot_risk_summary_matrix()
-    print("All reports generated and saved to disk.")
+    logger.info("All reports generated and saved to disk.")
 
 if __name__ == "__main__":
     main()

@@ -8,6 +8,10 @@ import pandas as pd
 import numpy as np
 #from turtle import pd
 
+# Setup logging for the ingestion pipeline
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 import yaml
 from src.utils.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
 from src.core.var_engine import VarEngine
@@ -43,6 +47,9 @@ def get_universe_tickers_from_config(config_path=TICKERS_YAML_PATH):
     """
     Reads the tickers.yml file and returns a flat list of all unique symbols.
     """
+
+    logger.info(f"Reading tickers from config at: {config_path}")
+
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
     
@@ -51,6 +58,7 @@ def get_universe_tickers_from_config(config_path=TICKERS_YAML_PATH):
         if category in ["universe_tickers"]:
             tickers.extend(config[category])
     
+    logger.info(f"Extracted universe tickers: {tickers}")
     return sorted(list(set(tickers)))
 
 
@@ -59,6 +67,8 @@ def get_spotlight_tickers_from_config(config_path=TICKERS_YAML_PATH):
     """
     Reads the tickers.yml file and returns a flat list of all unique symbols.
     """
+    logger.info(f"Reading tickers from config at: {config_path}")
+
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
     
@@ -68,6 +78,7 @@ def get_spotlight_tickers_from_config(config_path=TICKERS_YAML_PATH):
         if category in ["spotlight_tickers"]:
             tickers.extend(config[category])
     
+    logger.info(f"Extracted spotlight tickers: {tickers}")
     return sorted(list(set(tickers)))
 
 
@@ -75,6 +86,8 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
     """
     Creates the medallion schema in the SQLite database.
     """
+
+    logger.info(f"Creating medallion schema in database at: {db_path} (initial_setup={initial_setup})")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
@@ -95,7 +108,8 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
             ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
+    logger.info("Bronze layer table 'bronze_price_history' created successfully.")
+
     # Gold: Risk Metrics
 
     cursor.execute("""
@@ -113,7 +127,8 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
             PRIMARY KEY (ticker, date)
         )
     """)
-    
+    logger.info("Gold layer table 'gold_risk_metrics' created successfully.")
+
     # Gold: Risk Inference Table
 
     if initial_setup:
@@ -138,6 +153,7 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
             PRIMARY KEY (ticker, date)
         )
     """)
+    logger.info("Silver layer table 'silver_risk_features' created successfully.")
 
     if initial_setup:
         cursor.execute("""
@@ -161,14 +177,14 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
             prediction_error FLOAT NULL
         )
     """)
+    logger.info("Gold layer table 'gold_risk_inference' created successfully.")
 
-    print("Creating gold_risk_var_summary table...")
+    logger.info("Creating gold_risk_var_summary table...")
     if initial_setup:
         cursor.execute("""
             DROP TABLE IF EXISTS gold_risk_var_summary
         """)
 
-    print("Creating gold_risk_var_summary table...")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS gold_risk_var_summary (
             ticker TEXT,
@@ -180,17 +196,19 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
             PRIMARY KEY (ticker, timestamp)
         )
     """)
-    print("Successfully created gold_risk_var_summary table.")  
+    logger.info("Gold layer table 'gold_risk_var_summary' created successfully.")
 
     conn.commit()
     conn.close()
-    print(str(db_path))
+    logger.info(f"Successfully initialized database at: {db_path}") 
+
 
 def run_silver_and_gold_views(db_path=DATABASE_PATH, sql_path=ANALYTICS_LAYER_SQL_PATH):
     """
     Runs the SQL script to create silver and gold views.
     """
-    print(str(db_path))
+    logger.info(f"Running SQL script to create silver and gold views from: {sql_path}")
+
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
@@ -200,13 +218,15 @@ def run_silver_and_gold_views(db_path=DATABASE_PATH, sql_path=ANALYTICS_LAYER_SQ
 
     conn.commit()
     conn.close()
-    print("Analytical views created in database at " + str(db_path))
+    logger.info(f"Successfully created silver and gold views in database at: {db_path}")
 
 
 def update_silver_risk_features(db_path=DATABASE_PATH):
     """
     Updates the gold risk inference table in the SQLite database.
     """
+    logger.info(f"Updating silver risk features in database at: {db_path}") 
+
     conn = sqlite3.connect(db_path)
     conn.create_function("SQRT", 1, safe_sqrt)
     conn.create_function("POWER", 2, safe_pow)
@@ -215,6 +235,8 @@ def update_silver_risk_features(db_path=DATABASE_PATH):
 
     cursor = conn.cursor()
     
+    logger.info("Calculating new risk features and deleting duplicates from silver_risk_features table.")
+
     # Bronze: Raw History
     cursor.execute("""
         WITH risk_features_new AS
@@ -244,6 +266,8 @@ def update_silver_risk_features(db_path=DATABASE_PATH):
         )
     """)
     
+    logger.info("Inserting new risk features into silver_risk_features table.")
+
     # Gold: Risk Metrics
     cursor.execute("""
         WITH risk_features_new AS
@@ -272,12 +296,14 @@ def update_silver_risk_features(db_path=DATABASE_PATH):
     
     conn.commit()
     conn.close()
-    print("Gold risk inference table updated at " + str(db_path))
+    logger.info(f"Silver risk features updated successfully in database at: {db_path}")
 
 def update_risk_metrics(db_path=DATABASE_PATH):
     """
     Updates the gold risk metrics table in the SQLite database.
     """
+    logger.info(f"Updating gold risk metrics in database at: {db_path}")    
+
     conn = sqlite3.connect(db_path)
     conn.create_function("SQRT", 1, safe_sqrt)
     conn.create_function("POWER", 2, safe_pow)
@@ -287,6 +313,8 @@ def update_risk_metrics(db_path=DATABASE_PATH):
     cursor = conn.cursor()
     
     # Gold: Risk Metrics
+    logger.info("Calculating new risk metrics and inserting into gold_risk_metrics table.")
+
     cursor.execute("""
             INSERT INTO gold_risk_metrics (
                 ticker, 
@@ -317,7 +345,7 @@ def update_risk_metrics(db_path=DATABASE_PATH):
     """)
     conn.commit()
     conn.close()
-    print("Gold risk metrics table updated at " + str(db_path))
+    logger.info(f"Gold risk metrics updated successfully in database at: {db_path}")
                    
 
 def update_risk_inference(db_path=DATABASE_PATH):
@@ -327,6 +355,7 @@ def update_risk_inference(db_path=DATABASE_PATH):
     from src.utils.config import DATABASE_PATH
     import sqlite3
 
+    logger.info(f"Updating risk inference in database at: {db_path}")
     # Connect to the SQLite database
     conn = sqlite3.connect(DATABASE_PATH)
     conn.create_function("SQRT", 1, safe_sqrt)
@@ -338,12 +367,12 @@ def update_risk_inference(db_path=DATABASE_PATH):
     try:
         df = pd.read_sql("SELECT * FROM silver_risk_features", conn)
     except Exception as e:
-        print(f"⚠️ Skipping Inference: Table 'silver_risk_features' not ready. {e}")
+        logger.warning(f"⚠️ Skipping Inference: Table 'silver_risk_features' not ready. {e}")
         conn.close()
         return
 
     if df.empty:
-        print("⚠️ Skipping Risk Inference: No data found in silver_risk_features.")
+        logger.warning("⚠️ Skipping Risk Inference: No data found in silver_risk_features.")
         conn.close()
         return
     
@@ -361,7 +390,7 @@ def update_risk_inference(db_path=DATABASE_PATH):
     model = RandomForestRegressor(n_estimators=100, random_state=42)
 
     if X_train is None or len(X_train) == 0:
-        print("⚠️ Skipping Risk Inference update: Not enough data in Silver/Gold views to train model.")
+        logger.warning("⚠️ Skipping Risk Inference update: Not enough data in Silver/Gold views to train model.")
         return
     
     model.fit(X_train, y_train)
@@ -379,7 +408,7 @@ def update_risk_inference(db_path=DATABASE_PATH):
                                 'predicted_beta_final', 'model_version', 'prediction_timestamp']
 
             audit_df.to_sql('gold_risk_inference', con=conn, if_exists='append', index=False)
-            print(f"✅ Successfully preserved {len(audit_df)} predictions in Gold Layer.")
+            logger.info(f"Successfully preserved {len(audit_df)} predictions in Gold Layer.")
 
     conn.commit()
     #conn.close()    
@@ -388,6 +417,8 @@ def update_risk_inference(db_path=DATABASE_PATH):
     # This logic assumes you have a 'fact_stock_metrics' table with the real data
     cursor = conn.cursor()
     
+    logger.info("Updating 'actual_beta_realized' in gold_risk_inference table based on gold_rolling_beta_30d data.")
+
     cursor.execute("""
         WITH beta_5dlead AS (
             SELECT 
@@ -408,8 +439,11 @@ def update_risk_inference(db_path=DATABASE_PATH):
         WHERE actual_beta_realized IS NULL;
     """)
     
+    logger.info("Successfully updated 'actual_beta_realized' for predictions where data is available.")
     # 2. Calculate the 'prediction_error'
     # Error = Actual - Predicted
+    logger.info("Calculating 'prediction_error' for gold_risk_inference table.")
+
     cursor.execute("""
         UPDATE gold_risk_inference
         SET prediction_error = actual_beta_realized - predicted_beta_final
@@ -417,9 +451,9 @@ def update_risk_inference(db_path=DATABASE_PATH):
     """)
     
     conn.commit()
-
     conn.close()
+    logger.info(f"Risk inference updated successfully in database at: {db_path}")   
 
 if __name__ == "__main__":
     create_medallion_schema(initial_setup=False)
-    print("Database schema created successfully.")
+    logger.info("Database schema created successfully.")

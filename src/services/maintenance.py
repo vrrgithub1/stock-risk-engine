@@ -5,6 +5,11 @@ Maintenance module for archiving old data from the Bronze layer to Historical st
 import sqlite3
 from datetime import datetime, timedelta
 from src.utils.config import DATABASE_PATH
+import logging
+
+# Setup logging for the ingestion pipeline
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def archive_old_data(days_to_keep=1095, db_path=DATABASE_PATH):
     """
@@ -14,12 +19,14 @@ def archive_old_data(days_to_keep=1095, db_path=DATABASE_PATH):
             db_path (str): Path to the SQLite database file.
     """
     
+    logger.info(f"Starting archival process for data older than {days_to_keep} days in database at: {db_path}") 
+    
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
     # Calculate the cutoff date
     cutoff_date = (datetime.now() - timedelta(days=days_to_keep)).strftime('%Y-%m-%d')
-    print(f"Archiving data older than {cutoff_date}...")
+    logger.info(f"Archiving data older than {cutoff_date}...")
 
     try:
         # 1. Create the Historical Table if it doesn't exist
@@ -39,13 +46,14 @@ def archive_old_data(days_to_keep=1095, db_path=DATABASE_PATH):
         # 3. VACUUM to shrink the database file and recover space
         conn.commit()
         conn.execute("VACUUM")
-        print("Archive complete. Database optimized.")
+        logger.info("Archive complete. Database optimized.")
         
     except Exception as e:
-        print(f"Error during cleanup: {e}")
+        logger.error(f"Error during cleanup: {e}")
         conn.rollback()
     finally:
         conn.close()
+    logger.info("Database connection closed after archival process.")
 
 if __name__ == "__main__":
     archive_old_data()

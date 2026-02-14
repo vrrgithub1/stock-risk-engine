@@ -39,6 +39,7 @@ class DataIngestor:
         try:
             # group_by='column' ensures we get a clean multi-index or flat DF
             df = yf.download(tickers, start=start_date, end=end_date, group_by='ticker', auto_adjust=True)
+            logger.info(f"Successfully fetched data for: {tickers}") 
             return df
         except Exception as e:
             logger.error(f"Error fetching yfinance data: {e}")
@@ -49,7 +50,13 @@ class DataIngestor:
         Pulls Macro data (e.g., ^TNX for 10Y Yield).
         """
         logger.info(f"Fetching macro indicator: {tickers}")
-        return yf.download(tickers, start=start_date, end=end_date, group_by='ticker', auto_adjust=True)
+        try:             # group_by='column' ensures we get a clean multi-index or flat DF
+            df = yf.download(tickers, start=start_date, end=end_date, group_by='ticker', auto_adjust=True)
+            logger.info(f"Successfully fetched macro indicator data for: {tickers}")
+            return df
+        except Exception as e:
+            logger.error(f"Error fetching macro indicator data: {e}")
+            return None
 
     def save_to_bronze(self, df, table_name="bronze_price_history"):
         """
@@ -61,7 +68,7 @@ class DataIngestor:
         df_flat.columns = [c.lower().replace(' ', '_') for c in df_flat.columns]
         df_flat['adj_close'] = df_flat['close']
 
-        print(df_flat.head())
+        logger.info(f"Sample data from flattened DataFrame: \n{df_flat.head()}")
 
         with self.db_conn as conn:
             df_flat.to_sql(
@@ -102,9 +109,11 @@ class DataIngestor:
         """
         Reads the tickers.yml file and returns a flat list of all unique symbols.
         """
+        logger.info(f"Reading tickers from config: {config_path}")
+
         if not os.path.exists(config_path):
             # Fallback if the file is missing
-            print(f"Warning: {config_path} not found. using default list.")
+            logger.warning(f"Warning: {config_path} not found. using default list.")
             return ["NVDA", "TSLA", "^GSPC"]
 
         with open(config_path, "r") as file:
@@ -117,12 +126,14 @@ class DataIngestor:
                 all_tickers.extend(config[category])
         
         # Return unique values only (in case you listed a ticker twice)
+        logger.info(f"Tickers extracted from config: {all_tickers}")
         return list(set(all_tickers))
     
     def run_bronze_ingestion(self):
         """
         Main function to run the Bronze ingestion pipeline.
         """
+        logger.info("Starting Bronze ingestion pipeline.")
         tickers = DataIngestor.get_tickers_from_config()
         self.tickers = tickers  # Store for later use in main.py
         start_date = "2024-01-01"
@@ -137,6 +148,8 @@ class DataIngestor:
             self.cleanup_duplicates()
         else:
             logger.error("No data fetched; skipping save and cleanup.")
+        
+        logger.info("Bronze ingestion pipeline complete.")
 
 # Example usage for tomorrow:
 # ingestor = DataIngestor(your_sqlite_conn)
