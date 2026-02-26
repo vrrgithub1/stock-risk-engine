@@ -13,13 +13,20 @@ This repository serves as a technical demonstration of modernizing **Systems of 
 
 # 🏗️ High-Level Architecture
 The engine follows a 3-tier Medallion Lakehouse design to ensure data lineage and integrity—crucial for regulatory auditability.
-
+```mermaid
+graph LR
+    A[Market Data APIs] --> B(Bronze: Raw)
+    B --> C(Silver: Engineered Features)
+    C --> D(Gold: Risk Model/Inference)
+    D --> E[Executive Risk Dashboard]
+    style D fill:#f96,stroke:#333,stroke-width:2px
+```
 
 | Layer | Component | Function |
 | ------- | ------------------- | ----------------------------------------------------------- |
-| Bronze | Raw Ingestion | High-frequency ingestion of equity price data and VIX indices via API. |
-| Silver | Engineered Features | Calculation of rolling volatility, 20-day/50-day SMA, and historical Beta. |
-| Gold | Predictive Gold | Random Forest Regressors forecasting 5-day Beta Drift for institutional hedging. |
+| **Bronze** | Raw Ingestion | High-frequency ingestion of equity price data and VIX indices via API. |
+| **Silver** | Engineered Features | Calculation of rolling volatility, 20-day/50-day SMA, and historical Beta. |
+| **Gold** | Predictive Gold | Random Forest Regressors forecasting 5-day Beta Drift for institutional hedging. |
 
 # Stock Risk Engine
 
