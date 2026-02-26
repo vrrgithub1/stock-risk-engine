@@ -4,11 +4,11 @@
 ## Target: Institutional Risk Infrastructure & Predictive Beta Drift Analysis
 
 # 🎖️ Executive Professional Context
-This repository serves as a technical demonstration of modernizing Systems of Record into Systems of Inference. It applies Databricks Medallion Architecture and Machine Learning to financial risk problems, mirroring the scale and compliance standards (BCBS 239) required at Tier-1 institutions like UBS, Credit Suisse, and Morgan Stanley.
+This repository serves as a technical demonstration of modernizing **Systems of Record into Systems of Inference**. It applies **Medallion Architecture and Machine Learning** to financial risk problems, mirroring the scale and compliance standards (BCBS 239) required at Tier-1 institutions like **UBS, Credit Suisse, and Morgan Stanley**.
 
-Certification Alignment: Built using methodologies from the Databricks Certified Data Engineer Professional (2025) and IBM AI/ML for Finance tracks.
+- **Certification Alignment:** Built using methodologies from the **Databricks Certified Data Engineer Professional (2025) and IBM AI/ML for Finance** tracks.
 
-Business Value: Demonstrates a framework for reducing TCO through Cloud-native automation while enhancing risk-capture granularity.
+- **Business Value:** Demonstrates a framework for reducing TCO through Cloud-native automation while enhancing risk-capture granularity.
 
 # Stock Risk Engine
 
