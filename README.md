@@ -1,7 +1,7 @@
 # Stock-Risk-Engine: Advanced Quantitative Risk Modeling
-## Version: 4.0 (Phase IV) | Architect: Venkat Rajadurai
+### Version: 4.0 (Phase IV) | Architect: Venkat Rajadurai
 
-## Target: Institutional Risk Infrastructure & Predictive Beta Drift Analysis
+### Target: Institutional Risk Infrastructure & Predictive Beta Drift Analysis
 
 # 🎖️ Executive Professional Context
 This repository serves as a technical demonstration of modernizing **Systems of Record into Systems of Inference**. It applies **Medallion Architecture and Machine Learning** to financial risk problems, mirroring the scale and compliance standards (BCBS 239) required at Tier-1 institutions like **UBS, Credit Suisse, and Morgan Stanley**.
