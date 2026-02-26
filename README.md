@@ -10,6 +10,17 @@ This repository serves as a technical demonstration of modernizing **Systems of 
 
 - **Business Value:** Demonstrates a framework for reducing TCO through Cloud-native automation while enhancing risk-capture granularity.
 
+
+# 🏗️ High-Level Architecture
+The engine follows a 3-tier Medallion Lakehouse design to ensure data lineage and integrity—crucial for regulatory auditability.
+
+
+| Layer | Component | Function |
+| ------- | ------------------- | ----------------------------------------------------------- |
+| Bronze | Raw Ingestion | High-frequency ingestion of equity price data and VIX indices via API. |
+| Silver | Engineered Features | Calculation of rolling volatility, 20-day/50-day SMA, and historical Beta. |
+| Gold | Predictive Gold | Random Forest Regressors forecasting 5-day Beta Drift for institutional hedging. |
+
 # Stock Risk Engine
 
 A professional-grade financial intelligence pipeline built to forecast volatility and market sensitivity ($\beta$) using Machine Learning and a Medallion Architecture.
