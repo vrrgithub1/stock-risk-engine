@@ -151,6 +151,26 @@ class DataIngestor:
         
         logger.info("Bronze ingestion pipeline complete.")
 
+    def fetch_sector_metadata(self,ticker_list):
+        sector_mapping = {}
+        for ticker in ticker_list:
+            try:
+                # Fetch metadata
+                stock_info = yf.Ticker(ticker).info
+                sector = stock_info.get('sector', 'Unknown')
+                industry = stock_info.get('industry', 'Unknown')
+                
+                sector_mapping[ticker] = {
+                    'sector': sector,
+                    'industry': industry
+                }
+                logger.info(f"✅ Classified {ticker}: {sector}")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not fetch metadata for {ticker}: {e}")
+                sector_mapping[ticker] = {'sector': 'Unknown', 'industry': 'Unknown'}
+                
+        return sector_mapping
+
 # Example usage for tomorrow:
 # ingestor = DataIngestor(your_sqlite_conn)
 # data = ingestor.fetch_stock_data(['NVDA', 'XOM'], '2024-01-01', '2026-01-19')

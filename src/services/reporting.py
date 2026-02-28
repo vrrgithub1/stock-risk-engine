@@ -23,6 +23,7 @@ from src.core.var_engine import VarEngine
 import os
 from datetime import datetime
 import logging
+import yfinance as yf
 
 # Setup logging for the ingestion pipeline
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +31,34 @@ logger = logging.getLogger(__name__)
 
 DATABASE_PATH = DATABASE_PATH
 REPORT_DIR = REPORT_DIR
+
+# --- New Phase V Logic ---
+class SectorEnricher:
+    def __init__(self):
+        self.cache = {}
+        self.db_path = DATABASE_PATH
+
+    def get_metadata(self, ticker):
+        if ticker in self.cache:
+            return self.cache[ticker]
+        
+        try:
+            info = yf.Ticker(ticker).info
+            metadata = {
+                'sector': info.get('sector', 'Unknown'),
+                'industry': info.get('industry', 'Unknown')
+            }
+            self.cache[ticker] = metadata
+            sconn = sqlite3.connect(self.db_path)
+            sconn.execute('''
+                INSERT OR REPLACE INTO ticker_ref (ticker, sector, industry)
+                VALUES (?, ?, ?)
+            ''', (ticker, metadata['sector'], metadata['industry']))
+            sconn.commit()
+            sconn.close()
+            return metadata
+        except:
+            return {'sector': 'Unknown', 'industry': 'Unknown'}
 class ReportGenerator:
     def __init__(self, db_path=DATABASE_PATH):
         self.db_path = db_path
@@ -37,6 +66,7 @@ class ReportGenerator:
         self.byebass_validate = False
         self.universe_tickers = get_universe_tickers_from_config()
         self.spotlight_tickers = get_spotlight_tickers_from_config()
+        self.enricher = SectorEnricher()
 
     def set_byebass_validate(self, value: bool):
         self.byebass_validate = value
@@ -269,8 +299,8 @@ class ReportGenerator:
 
         conn.close()
 
-        print("✅ Model Trained and Inference Completed!")
-        print(importance)
+        logger.info("✅ Model Trained and Inference Completed!")
+        logger.info(importance)
         self.inference_df = inference_df
         logger.info("Inference data fetched and predictions made successfully.")
         return inference_df
@@ -516,9 +546,13 @@ class ReportGenerator:
         try:
             # Pass the variables as a tuple in the second argument
             df = pd.read_sql(query, conn, params=(ticker, trading_days))
+
+            # Assuming 'df' is your historical price dataframe (252 rows)
+            # Get the date of the very last row
+            effective_date = df['date'].iloc[0]  # Get the first date in the dataframe (most recent)
             
             if df.empty:
-                print(f"⚠️ No data found for {ticker}")
+                logger.warning(f"⚠️ No data found for {ticker}")
                 return None
                 
             returns = df.set_index('date')['daily_return'].dropna().values
@@ -541,10 +575,10 @@ class ReportGenerator:
         conn = sqlite3.connect(self.db_path)
 
         insert_query = '''
-            INSERT INTO gold_risk_var_summary (ticker, historical_var, parametric_var, monte_carlo_var, display_text)
-            VALUES (?, ?, ?, ?, ?);
+            INSERT INTO gold_risk_var_summary (ticker, historical_var, parametric_var, monte_carlo_var, display_text, forecast_date)
+            VALUES (?, ?, ?, ?, ?, ?);
         '''      
-        conn.execute(insert_query, (ticker, historical_var, parametric_var, monte_carlo_var, display_text))  
+        conn.execute(insert_query, (ticker, historical_var, parametric_var, monte_carlo_var, display_text, effective_date))  
 
         conn.commit()
         conn.close()
@@ -555,7 +589,8 @@ class ReportGenerator:
             "historical_var": round(float(historical_var), 4),
             "parametric_var": round(float(parametric_var), 4),
             "monte_carlo_var": round(float(monte_carlo_var), 4),
-            'display_text': display_text
+            'display_text': display_text,
+            'effective_date': effective_date
         }
 
     def plot_risk_summary_matrix(self):
@@ -583,7 +618,7 @@ class ReportGenerator:
         conn.close()
 
         if df.empty:
-                print("⚠️ No data available for Risk Matrix.")
+                logger.warning("⚠️ No data available for Risk Matrix.")
                 return
 
         # 2. Define Quadrants for "Colorfulness"
@@ -643,13 +678,212 @@ class ReportGenerator:
 
         self.save_report(fig, "risk_summary_matrix")
         logger.info("Risk Summary Matrix generated and saved successfully.")
-    
+
+    def calculate_sector_concentration(self, gold_df):
+        """
+        Aggregates risk metrics by sector to identify concentration hot-spots.
+        Assumes gold_df contains 'ticker', 'sector', and 'var_95_monte_carlo'
+        """
+        # 1. Group by sector and calculate mean risk & count of tickers
+        sector_summary = gold_df.groupby('sector').agg({
+            'ticker': 'count',
+            'var_95_monte_carlo': 'mean',
+            'feat_rolling_beta_130d': 'mean'
+        }).rename(columns={'ticker': 'ticker_count'})
+
+        # 2. Calculate Relative Risk Contribution
+        # We use the absolute value of VaR because it is a negative number
+        total_avg_risk = sector_summary['var_95_monte_carlo'].abs().sum()
+        sector_summary['risk_contribution_pct'] = (
+            sector_summary['var_95_monte_carlo'].abs() / total_avg_risk
+        ) * 100
+
+        # 3. Sort by highest risk contribution
+        sector_summary = sector_summary.sort_values(by='risk_contribution_pct', ascending=False)
+        
+        return sector_summary
+
+
+    def get_sector_summary(self):
+        logger.info("Generating Sector Concentration Summary for all tickers in the universe.")
+
+        conn = sqlite3.connect(self.db_path)
+        universal_tickers = get_universe_tickers_from_config()
+        univ_tickers_tuper = tuple(universal_tickers)  # Convert list to tuple for SQL IN clause
+        logger.info(f"Generating Risk Summary Matrix for tickers: {universal_tickers}")
+
+        # Joining the ML predictions with the VaR calculations
+        query = """
+        SELECT 
+            grrvs.ticker, 
+            grrvs.monte_carlo_var as var_95_monte_carlo, 
+            grri.predicted_beta_final as feat_rolling_beta_130d,
+            grri.forecast_date,
+            tr.sector,
+            tr.industry
+        FROM gold_recent_risk_var_summary grrvs 
+        JOIN gold_recent_risk_inference grri ON grrvs.ticker = grri.ticker
+        LEFT JOIN ticker_ref tr ON grrvs.ticker = tr.ticker
+        WHERE grrvs.ticker IN {}
+        """
+        query = query.format(univ_tickers_tuper)
+        
+        df = pd.read_sql(query, conn)
+
+        conn.close()
+        if df.empty:
+            logger.warning("⚠️ No data available for Sector Summary.")
+            return None
+        else:
+            return self.calculate_sector_concentration(df)
+
+    def validate_model_performance(self, ticker, predicted_var, forecast_date):
+        """
+        Compares the predicted VaR floor against actual market realization.
+        """
+
+        try:
+            # Fetch the actual price on/after the forecast date
+            data = yf.download(ticker, start=forecast_date, end=(pd.to_datetime(forecast_date) + pd.Timedelta(days=5)).strftime('%Y-%m-%d'), multi_level_index=False, auto_adjust=True)
+            # logger.info(f"Data fetched for validation: \n{data['Close']}")
+            if data.empty or len(data) < 2:
+                logger.warning(f"Not enough data to validate model performance for {ticker} on {forecast_date}.")
+                return None
+            
+            # Calculate actual log return for the next trading day
+            actual_return = data['Close'].pct_change().dropna().iloc[0]
+            logger.info(f"Actual return for {ticker} on {data.index[1].date()}: {actual_return:.4f}")
+            
+            # Check for 'Violation' (Breach)
+            is_violation = actual_return < predicted_var
+            
+            logger.info(f"Validating model performance for {ticker} on forecast date {forecast_date}:")
+
+            return {
+                'actual_return': actual_return,
+                'is_violation': is_violation,
+                'breach_magnitude': actual_return - predicted_var if is_violation else 0
+            }
+        except Exception as e:
+            logger.error(f"Error validating model performance for {ticker}: {e}")
+            return None
+
+    def persist_backtest_results(self, ticker, predicted_var_95, forecast_date):
+        """
+        Validates a past forecast and saves the result to the Gold Backtesting table.
+        """
+        # 1. Run the validation logic we drafted
+        validation = self.validate_model_performance(ticker, predicted_var_95, forecast_date)
+
+        if validation is None:
+            logger.warning(f"Validation failed for {ticker} on {forecast_date}. Skipping persistence.")
+            return
+        
+        actual_return = validation['actual_return']
+        is_violation = 1 if validation['is_violation'] else 0
+        
+        if validation:
+            # 2. SQL UPSERT (Update if exists, Insert if not) 
+            # to ensure no duplicate records for the same ticker/date
+            query = """
+            INSERT INTO gold_risk_backtesting (ticker, forecast_date, predicted_var_95, actual_return, is_violation)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT (ticker, forecast_date) 
+            DO UPDATE SET 
+                actual_return = EXCLUDED.actual_return,
+                is_violation = EXCLUDED.is_violation;
+            """
+            
+            # Execute using your existing db_engine logic
+            conn = sqlite3.connect(self.db_path)
+
+            conn.execute(query, (
+                ticker, 
+                str(forecast_date), 
+                predicted_var_95, 
+                actual_return, 
+                is_violation
+            ))
+            conn.commit()
+            conn.close()
+
+    def backfill_phase_iv_backtests(self):
+        # 1. Pull all historical forecasts
+        query = "SELECT ticker, timestamp, monte_carlo_var, forecast_date as forecast_date FROM gold_risk_var_summary"  # Pull only last 2 days
+        conn = sqlite3.connect(self.db_path)
+        df = pd.read_sql(query, conn)
+        conn.close()
+        
+        logger.info(f"🚀 Starting backfill for {len(df)} historical records...")
+        
+        for _, row in df.iterrows():
+            # Skip today's date as it hasn't 'happened' yet
+            if row['forecast_date'] >= pd.Timestamp.today().strftime('%Y-%m-%d'):
+                continue
+                
+            # 3. Use your existing logic to validate and persist
+            self.persist_backtest_results(
+                ticker=row['ticker'],
+                predicted_var_95=row['monte_carlo_var'],
+                forecast_date=row['forecast_date']
+            )
+            logger.info(f"✅ Backfilled: {row['ticker']} for {row['forecast_date']}")
+
+    def get_backtest_summary(self):
+        """Fetches the backfill data for the dashboard."""
+        import sqlite3
+        import pandas as pd
+        
+        conn = sqlite3.connect(self.db_path)
+        # Join with your new ticker_ref table to get Sector/Industry info!
+        query = """
+        SELECT b.*, r.sector, r.industry 
+        FROM gold_risk_backtesting b
+        LEFT JOIN ticker_ref r ON b.ticker = r.ticker
+        ORDER BY b.forecast_date DESC
+        """
+        df = pd.read_sql(query, conn)
+        conn.close()
+        return df
+
+    def get_extreme_events(self, threshold=-0.01):
+        """
+        Identifies breaches where the actual return was at least 1% worse 
+        than the predicted VaR floor.
+        """
+        import sqlite3
+        import pandas as pd
+        
+        conn = sqlite3.connect(self.db_path)
+        query = """
+        SELECT 
+            ticker, 
+            forecast_date, 
+            predicted_var_95, 
+            actual_return,
+            (actual_return - predicted_var_95) as breach_magnitude
+        FROM gold_risk_backtesting
+        WHERE is_violation = 1
+        ORDER BY breach_magnitude ASC
+        """
+        df = pd.read_sql(query, conn)
+        conn.close()
+        
+        # Filter for 'Extreme' events (e.g., magnitude > 1%)
+        extreme_df = df[df['breach_magnitude'] <= threshold]
+        return extreme_df        
+
 if __name__ == "__main__":
     # Indenting these lines makes them "safe." 
     # They won't run when main.py imports this file.
     repgen = ReportGenerator()
-    summary = repgen.get_var_risk_summary("CVX") 
-    print(summary)
+    repgen.backfill_phase_iv_backtests()
+    df = repgen.get_backtest_summary()
+    logger.info(df.head())
+#    summary = repgen.get_var_risk_summary("CVX") 
+#    print(summary)
+#    Sector_Summary = repgen.get_sector_summary()
+#    print(Sector_Summary)
 #    repgen = ReportGenerator()
 #    repgen.set_byebass_validate(True)  # Bypass validation for testing purposes
 #    repgen.plot_stock_risk("NVDA")
