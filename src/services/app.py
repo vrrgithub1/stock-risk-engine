@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 from src.services.reporting import ReportGenerator # Import your generator
+import pandas as pd
 
 # Initialize your reporting service
 report_gen = ReportGenerator()
@@ -9,6 +10,7 @@ st.set_page_config(page_title="Risk Command Center", layout="wide")
 
 # 1. Fetch Data via the Backend
 df = report_gen.get_backtest_summary()
+print(df.head()) # Debugging line to check the structure of the DataFrame
 
 st.title("🛡️ Institutional Risk Command Center")
 st.markdown(f"**Data Status:** Monitoring {df['ticker'].nunique()} tickers across {df['sector'].nunique()} sectors.")
@@ -65,7 +67,8 @@ with col2:
     
     # Sort data for time-series consistency
     df_timeline = df.sort_values('forecast_date')
-    
+    df_timeline['forecast_date'] = pd.to_datetime(df_timeline['forecast_date'])
+
     fig_timeline = go.Figure()
 
     # 1. Add the Actual Returns as Bars
@@ -91,6 +94,7 @@ with col2:
         height=350,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
+
     st.plotly_chart(fig_timeline, use_container_width=True)
 
 # --- Extreme Event Tracker Section ---

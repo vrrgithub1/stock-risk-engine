@@ -739,35 +739,46 @@ class ReportGenerator:
 
     def validate_model_performance(self, ticker, predicted_var, forecast_date):
         """
-        Compares the predicted VaR floor against actual market realization.
+        Compares predicted VaR floor against internal silver_returns data.
         """
-
         try:
-            # Fetch the actual price on/after the forecast date
-            data = yf.download(ticker, start=forecast_date, end=(pd.to_datetime(forecast_date) + pd.Timedelta(days=5)).strftime('%Y-%m-%d'), multi_level_index=False, auto_adjust=True)
-            # logger.info(f"Data fetched for validation: \n{data['Close']}")
-            if data.empty or len(data) < 2:
-                logger.warning(f"Not enough data to validate model performance for {ticker} on {forecast_date}.")
+            import sqlite3
+            # 1. Connect to your local 'Single Source of Truth'
+            conn = sqlite3.connect(self.db_path)
+            
+            # 2. Query the exact return for the ticker and date
+            # Assuming your silver_returns table has 'ticker', 'date', and 'daily_return'
+            query = """
+                SELECT daily_return 
+                FROM silver_returns 
+                WHERE ticker = ? AND date = ?
+            """
+            
+            # Note: Ensure forecast_date is in 'YYYY-MM-DD' string format
+            df_result = pd.read_sql_query(query, conn, params=(ticker, forecast_date))
+            conn.close()
+
+            if df_result.empty:
+                logger.warning(f"No internal data found for {ticker} on {forecast_date}.")
                 return None
             
-            # Calculate actual log return for the next trading day
-            actual_return = data['Close'].pct_change().dropna().iloc[0]
-            logger.info(f"Actual return for {ticker} on {data.index[1].date()}: {actual_return:.4f}")
+            actual_return = df_result['daily_return'].iloc[0]
             
-            # Check for 'Violation' (Breach)
-            is_violation = actual_return < predicted_var
+            # 3. Check for 'Violation' (Breach)
+            is_violation = float(actual_return) < float(predicted_var)
             
-            logger.info(f"Validating model performance for {ticker} on forecast date {forecast_date}:")
+            logger.info(f"Verified {ticker} on {forecast_date}: Return {actual_return:.4f} vs VaR {predicted_var:.4f}")
 
             return {
                 'actual_return': actual_return,
-                'is_violation': is_violation,
+                'is_violation': int(is_violation), # 1 for True, 0 for False
                 'breach_magnitude': actual_return - predicted_var if is_violation else 0
             }
-        except Exception as e:
-            logger.error(f"Error validating model performance for {ticker}: {e}")
-            return None
 
+        except Exception as e:
+            logger.error(f"Error validating internally for {ticker}: {e}")
+            return None
+    
     def persist_backtest_results(self, ticker, predicted_var_95, forecast_date):
         """
         Validates a past forecast and saves the result to the Gold Backtesting table.
@@ -809,7 +820,11 @@ class ReportGenerator:
 
     def backfill_phase_iv_backtests(self):
         # 1. Pull all historical forecasts
-        query = "SELECT ticker, timestamp, monte_carlo_var, forecast_date as forecast_date FROM gold_risk_var_summary"  # Pull only last 2 days
+        query = """
+        SELECT ticker, timestamp, monte_carlo_var, forecast_date as forecast_date 
+        FROM gold_risk_var_summary 
+        WHERE forecast_date NOT IN (SELECT DISTINCT forecast_date FROM gold_risk_backtesting)
+        """  # Pull only last 2 days
         conn = sqlite3.connect(self.db_path)
         df = pd.read_sql(query, conn)
         conn.close()
