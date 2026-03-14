@@ -12,9 +12,11 @@ A professional-grade financial intelligence pipeline built to forecast volatilit
 The **Stock Risk Engine** is an end-to-end predictive analytics platform designed to help Portfolio Managers anticipate systematic risk shifts before they materialize. By combining a **Medallion Data Architecture** with **Random Forest Machine Learning**, the engine transforms raw market data into forward-looking "Beta Drift" forecasts, allowing for proactive rather than reactive hedging. The system dynamically contextualizes stock-specific volatility against multi-tier **VIX Market Regimes**, ensuring that risk signals are always interpreted within the current macro environment.
 
 ### Architecture Diagram
+
 ![Stock Risk Engine Architecture](docs/Stock_Risk_Engine_Architecture.png)
 
 ### MLOps Automation Architecture
+
 The Stock Risk Engine has been evolved into a fully automated, cloud-native MLOps pipeline. By leveraging GitHub Actions as the primary orchestration layer, the system now performs daily asynchronous data ingestion, feature engineering, and predictive modeling on a scheduled cron-basis. The architecture utilizes a stateless POSIX environment that dynamically initializes a schema-on-run SQLite database, ensuring data integrity across ephemeral runners. Upon successful model inference—which currently prioritizes rolling beta and market regime volatility as primary risk vectors—the system generates a suite of ticker-specific visualizations. These assets, including synthetic stress-test ('Panic') reports, are captured as immutable build artifacts, providing a comprehensive daily audit trail of market risk performance.
 
 1. Trigger: GitHub Actions (via cron or push).
@@ -27,33 +29,39 @@ The Stock Risk Engine has been evolved into a fully automated, cloud-native MLOp
 ![MLOps Automation Architecture](docs/MLOps%20Automation%20Architecture.png)
 
 ## 🚀 Phase IV: Advanced Quantitative Risk Modeling
+
 In the latest release, the engine has been upgraded to include a multi-engine **Value-at-Risk (VaR)** framework, shifting the focus from historical reporting to predictive downside protection.
 
 ### 🧮 Multi-Engine VaR Framework
+
 * **Historical Simulation:** Non-parametric assessment using actual 252-day return distributions.
 * **Parametric (Variance-Covariance):** Statistical modeling based on portfolio mean-variance.
 * **Monte Carlo Simulation:** 1,000+ stochastic iterations to capture "Fat-Tail" events and non-linear risks.
 
 ### 📊 Strategic Risk-Reward Matrix
+
 The engine now generates a dynamic four-quadrant analysis joining **ML-Predicted Beta** (Market Sensitivity) with **Monte Carlo VaR** (Tail-Risk).
 
 **Current Market Classifications:**
+
 * 🔵 **Efficient (High Beta / Low VaR):** High market sensitivity with resilient downside floors. (e.g., **NVDA**, **TSLA**)
 * 🔴 **Aggressive (High Beta / High VaR):** High-growth exposure with significant one-day loss potential.
 * 🟡 **Outlier Risk (Low Beta / High VaR):** High idiosyncratic risk despite low market correlation. (e.g., **PG**, **XOM**)
 * 🟢 **Defensive (Low Beta / Low VaR):** Institutional "Safe Havens" with minimized downside. (e.g., **CVX**)
 
-![Risk Matrix](docs/Risk_Matrix.png) 
+![Risk Matrix](docs/Risk_Matrix.png)
 
 ## 📈 Institutional Stock Risk Engine: Phase V Release
+
 An institutional-grade risk management platform leveraging Monte Carlo simulations for Value-at-Risk (VaR) forecasting and automated model validation.
 
 ### 🚀 Model Validation & Performance Certification
+
 Phase V marks the successful certification of the model's predictive accuracy. By moving to an internal "Single Source of Truth" for backtesting, the engine has achieved institutional-level stability.
 
-### Key Metrics as of March 2026:
-* **Model Health Score:** ✅ 3.28% Violation Rate (Target < 5.0%)
+### Key Metrics as of March 2026
 
+* **Model Health Score:** ✅ 3.28% Violation Rate (Target < 5.0%)
 * **Confidence Interval:** 95%
 * **Backtest Success:** 96.72% of market realizations contained within predicted risk floors.
 * **Engine Specs:** 10,000 Monte Carlo iterations per asset with a 130-day trailing volatility window.
@@ -62,28 +70,34 @@ Phase V marks the successful certification of the model's predictive accuracy. B
 
 ### 1. Internal Validation Pipeline
 
-The model now utilizes the Silver Data Layer for backtesting instead of external API calls. 
+The model now utilizes the Silver Data Layer for backtesting instead of external API calls.
+
 This ensures:
+
 * **Zero-Lag Reporting:** Immediate validation of Friday's close without waiting for adjusted-price updates.
 * **Data Parity:** The same cleaning logic used for the simulation is used for the validation.
 
 ### 2. Institutional Risk Dashboard
 
 Updated Streamlit interface featuring:
+
 * **Health Gauge:** Visual Pass/Fail indicator for model calibration.
 * **VaR Breach Timeline:** Historical tracking of price movement vs. the "Orange Net" risk floor.
 * **Panic Overlay:** Real-time correlation analysis between portfolio assets, the VIX, and rolling 30-day betas.
 
 ### 3. Tail-Risk Attribution
+
 Automated logging of "Clean Violations" (e.g., recorded breaches in NVDA and XOM) to monitor idiosyncratic versus systemic risk events.
 
 ## 🏆 Current Status: Phase V Certified
+
 **Model Health Score:** ✅ **3.28% Violation Rate** (Target < 5.0%)  
 **Release Date:** March 18, 2026
 
 > 📖 **Project Evolution:** For a detailed breakdown of the technical milestones achieved in Phases I through IV, please see the [Comprehensive Phases Update (PHASES.md)](./PHASES.md).
 
 ## 🛠️ Technical Stack & Architecture
+
 * **Language:** Python 3.10+
 * **Database:** SQLite (Medallion Architecture: Bronze ➔ Silver ➔ Gold)
 * **Analytics:** Pandas, NumPy, Scipy (Monte Carlo Simulations)
@@ -104,30 +118,36 @@ This project implements a Medallion Architecture for financial data processing:
 ## 📈 Key Quantitative Features
 
 ### 1. Rolling Volatility
+
 Calculates the 30-day annualized standard deviation of returns. This helps identify "Volatility Regimes" where a stock's risk profile shifts independently of the market.
 
 σₐₙₙᵤₐₗ = σₔₐᵢₗᵧ × √252
 
 ### 2. Rolling Market Beta (β)
+
 Measures the systematic risk of an asset in relation to the S&P 500.
-- β > 1: High sensitivity (Aggressive Growth)
-- β < 1: Low sensitivity (Defensive/Value)
-- β < 0: Inverse correlation (Hedge assets)
+
+* β > 1: High sensitivity (Aggressive Growth)
+* β < 1: Low sensitivity (Defensive/Value)
+* β < 0: Inverse correlation (Hedge assets)
 
 ### 3. Historical Stress Testing
+
 A simulation engine that identifies the **Maximum 5-Day Drawdown** for a custom-weighted portfolio, providing a realistic view of tail risk during historical market shocks.
 
 ### 4. Predictive Beta Drift (Phase II Machine Learning)
-A Random Forest Regressor architecture designed to forecast the **5-Day Forward Beta Drift**  ($target\_beta\_drift\_5d$). Unlike static historical beta, this feature predicts how a stock's sensitivity to the market will evolve over the next week.<br>
+
+A Random Forest Regressor architecture designed to forecast the **5-Day Forward Beta Drift**  ($target\_beta\_drift\_5d$). Unlike static historical beta, this feature predicts how a stock's sensitivity to the market will evolve over the next week.
 
 $$
-\hat{\beta}_{t+5} = f( \beta_{130d}, \sigma_{30d}, r_{5d}, VIX ) 
+\hat{\beta}_{t+5} = f( \beta_{130d}, \sigma_{30d}, r_{5d}, VIX )
 $$
 
 * **Model Input Weights:** The engine weighs **Rolling Beta (38%), Intraday Volatility (34%), and Cumulative Returns (21%)** to identify impending risk expansions or contractions.
 * **Significance:** Enables proactive portfolio rebalancing before realized volatility spikes.
 
 ### 5. Multi-Tier Market Regime Classification
+
 A dynamic classification system that segments market environments into three distinct risk tiers based on VIX (CBOE Volatility Index) thresholds. This serves as the "Global macro-filter" for all stock-specific predictions.
 
 |Regime|VIX Threshold|Model Behavior|
@@ -137,6 +157,7 @@ A dynamic classification system that segments market environments into three dis
 |**Stress**|**$>25$**|High-risk mode; model prioritizes systemic correlation and tail-risk.|
 
 ### 6. Idiosyncratic Risk Divergence Analysis
+
 A proprietary logic that isolates "Stock-Specific Noise" from "Market Signals." By comparing price action against a flat VIX environment, the system identifies when a stock (e.g., TSLA or NVDA) is decoupling from the broader S&P 500, signaling a potential break in historical correlation.
 
 ## Sample Visualizations
@@ -144,7 +165,7 @@ A proprietary logic that isolates "Stock-Specific Noise" from "Market Signals." 
 Here are some sample visualizations generated by the `app_visualizer.py`, `app_visualizer2.py` and `app_visualizer3.py` modules. The table below summarizes the key report images used in presentations and PDF reports:
 
 | Figure | Title | Image |
-|---:|---|:---|
+| ---: | --- | :--- |
 | 1 | Portfolio Correlation Matrix | ![Portfolio Correlation Matrix](docs/Portfolio%20Correlation%20Matrix.png) |
 | 2 | Risk Analysis Dashboard | ![Risk Analysis Dashboard](docs/Risk%20Analysis%20Dashboard.png) |
 | 3 | Risk Analysis with Panic Overlay | ![Risk Analysis with Panic Overlay](docs/Risk%20Analysis%20with%20Panic%20Overlay.png) |
@@ -162,7 +183,7 @@ Here are some sample visualizations generated by the `app_visualizer.py`, `app_v
 
 Below is the current repository layout (snapshot taken 2026-02-12) with short descriptions for each folder/file.
 
-```
+```bash
 stock-risk-engine/
 ├── Dockerfile                      # Optional: container image build instructions
 ├── environment.yml                 # Conda environment specification
@@ -197,35 +218,37 @@ stock-risk-engine/
 
 Directory highlights
 
-- **Root files:** Scripts and environment manifests to reproduce local or CI runs (`environment.yml`, `requirements*.txt`, `run_pipeline.*`).
-- **config/**: Centralized settings (tickers, symbols) used by the ingestion and orchestration code.
-- **data/**: Implements the Medallion pattern—`bronze/` contains raw ingested files; Silver/Gold are produced into the DB or views during processing.
-- **deployment/**: Docker/CI packaging and deployment helpers; alternative Dockerfile backups live here.
-- **docs/** and **reports/**: Static assets, diagrams and generated risk reports used for review and distribution.
-- **sql/**: DDL and view definitions to build analytics-ready tables used by the Gold layer.
-- **src/**: Application code organized into:
-    - `core/`: core numerical and risk engine functions (VaR, beta calculations).
-    - `services/`: orchestration helpers (DB access, ingestion, maintenance, reporting).
-    - `utils/`: configuration and small helpers.
+* **Root files:** Scripts and environment manifests to reproduce local or CI runs (`environment.yml`, `requirements*.txt`, `run_pipeline.*`).
+* **config/**: Centralized settings (tickers, symbols) used by the ingestion and orchestration code.
+* **data/**: Implements the Medallion pattern—`bronze/` contains raw ingested files; Silver/Gold are produced into the DB or views during processing.
+* **deployment/**: Docker/CI packaging and deployment helpers; alternative Dockerfile backups live here.
+* **docs/** and **reports/**: Static assets, diagrams and generated risk reports used for review and distribution.
+* **sql/**: DDL and view definitions to build analytics-ready tables used by the Gold layer.
+* **src/**: Application code organized into:
+  * `core/`: core numerical and risk engine functions (VaR, beta calculations).
+  * `services/`: orchestration helpers (DB access, ingestion, maintenance, reporting).
+  * `utils/`: configuration and small helpers.
 
 This structure is intentionally small and focused so the pipeline can run locally (SQLite) or be containerized for CI/CD.
 
 ## 🚀 Getting Started
 
-**1. Clone the repo:** `git clone <your-repo-url>`<br>
-**2. Setup Conda:** `conda env create -f environment.yml`<br>
-**3. Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.<br>
-**4. Run Script:** `./run_pipeline.sh` or `./run_pipeline.bat` (This builds the Bronze/Silver/Gold layers and generates the reports in Reports directory).<br>
+**1. Clone the repo:** `git clone <your-repo-url>`
+**2. Setup Conda:** `conda env create -f environment.yml`
+**3. Configure Tickers:** Edit `config/tickers.yml` to track your preferred assets.
+**4. Run Script:** `./run_pipeline.sh` or `./run_pipeline.bat` (This builds the Bronze/Silver/Gold layers and generates the reports in Reports directory).
 
 ## Installation & Setup
 
 ### Prerequisites
-- Python 3.8+
-- pip package manager
+
+* Python 3.8+
+* pip package manager
 
 ### Installation Steps
 
 1. **Clone or download the project**
+
    ```bash
    cd /path/to/your/projects
    # Assuming you have the project folder
@@ -233,17 +256,20 @@ This structure is intentionally small and focused so the pipeline can run locall
    ```
 
 2. **Install dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 3. **Initialize the project structure** (optional, if starting fresh)
+
    ```bash
    chmod +x init_project.sh
    ./init_project.sh
    ```
 
 4. **Set up the database**
+
    ```bash
    python src/setup_db.py
    ```
@@ -259,12 +285,13 @@ python main.py
 ```
 
 This script will:
-- Fetch data for predefined stocks (NVDA, TSLA, XOM, CVX, PG)
-- Fetch macro indicators (^TNX, ^IRX, ^GSPC, ^IXIC, ^VIX)
-- Save data to the bronze layer in SQLite
-- Clean up duplicate entries
-- Build analytical views for silver and gold layers
-- Perform maintenance tasks like archiving old data
+
+* Fetch data for predefined stocks (NVDA, TSLA, XOM, CVX, PG)
+* Fetch macro indicators (^TNX, ^IRX, ^GSPC, ^IXIC, ^VIX)
+* Save data to the bronze layer in SQLite
+* Clean up duplicate entries
+* Build analytical views for silver and gold layers
+* Perform maintenance tasks like archiving old data
 
 ### Custom Data Ingestion
 
@@ -481,8 +508,9 @@ erDiagram
 ### Bronze Layer Tables
 
 #### Table: bronze_price_history
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :----------------------------------------------------- |
 | id | INTEGER | Auto-incremented unique record identifier (Primary Key) |
 | ticker | TEXT | Company ticker symbol |
 | date | TEXT | Business or stock trade date (YYYY-MM-DD) |
@@ -495,8 +523,9 @@ erDiagram
 | ingested_at | TIMESTAMP | Timestamp when the record was ingested into the system |
 
 #### Table: bronze_historical_price_archive
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :------------ |
 | id | INTEGER | Auto-incremented unique record identifier (Primary Key) |
 | ticker | TEXT | Company ticker symbol |
 | date | TEXT | Business or stock trade date (YYYY-MM-DD) |
@@ -512,23 +541,26 @@ erDiagram
 ### Silver Layer Tables
 
 #### Table: silver_returns
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :----------- | :---------- | :------------------------------------------------------------------- |
 | ticker | TEXT | Company ticker symbol |
 | trade_date | TEXT | Business or stock trade date (YYYY-MM-DD) |
 | return_1d | REAL | One-day percentage return calculated from adjusted closing prices |
 
 #### Table: silver_rolling_volatility
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :------------ |
 | ticker | TEXT | Company ticker symbol |
 | calculation_date | TEXT | Date when the volatility was calculated (YYYY-MM-DD) |
 | window_days | INTEGER | The rolling window size in days used for volatility calculation |
 | volatility | REAL | The annualized rolling volatility for the specified window |
 
 #### Table: silver_risk_features
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :------------ |
 | ticker | TEXT | Company ticker symbol (Composite Primary Key) |
 | date | DATE | Business or stock trade date (Composite Primary Key) |
 | feat_rolling_vol_30d | REAL | 30-day rolling annualized volatility feature (input to ML model) |
@@ -540,23 +572,26 @@ erDiagram
 ### Gold Layer Tables
 
 #### Table: gold_rolling_beta_30d
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :------------ |
 | ticker | TEXT | Company ticker symbol |
 | calculation_date | TEXT | Date when the beta was calculated (YYYY-MM-DD) |
 | beta_30d | REAL | The 30-day rolling beta coefficient measuring systematic risk relative to S&P 500 |
 
 #### Table: gold_max_drawdown
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :------------ |
 | ticker | TEXT | Company ticker symbol |
 | peak_date | TEXT | Date when the price peak occurred (YYYY-MM-DD) |
 | trough_date | TEXT | Date when the price trough occurred (YYYY-MM-DD) |
 | max_drawdown | REAL | The maximum percentage decline from peak to trough |
 
 #### Table: gold_risk_metrics
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :------------ |
 | ticker | TEXT | Company ticker symbol |
 | calculation_date | TEXT | Date when the metric was calculated |
 | metric_type | TEXT | Type of risk metric (e.g., 'volatility', 'beta') |
@@ -564,8 +599,9 @@ erDiagram
 | value | REAL | Calculated metric value |
 
 #### Table: gold_risk_inference
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :------------ |
 | prediction_id | INTEGER | Auto-incremented unique prediction identifier (Primary Key) |
 | prediction_timestamp | TIMESTAMP | Timestamp when the prediction was generated |
 | ticker | TEXT | Company ticker symbol |
@@ -578,8 +614,9 @@ erDiagram
 | prediction_error | REAL | Difference between actual and predicted beta (actual - predicted) |
 
 #### Table: gold_risk_var_summary
+
 | Column | Data Type | Description |
-|:--------|:----------|:------------|
+| :-------- | :---------- | :------------ |
 | ticker | TEXT | Company ticker symbol (Composite Primary Key) |
 | timestamp | TIMESTAMP | Timestamp of the VaR calculation (Composite Primary Key) |
 | historical_var | REAL | Historical simulation VaR at 95% confidence level (one-day loss percentage) |
@@ -602,9 +639,10 @@ The project uses configuration files in the `config/` directory. The `tickers.ym
 ### Testing
 
 Currently, the project does not have automated tests. Manual testing can be performed by:
-- Running the ingestion scripts
-- Verifying data in the SQLite database
-- Checking calculated metrics manually
+
+* Running the ingestion scripts
+* Verifying data in the SQLite database
+* Checking calculated metrics manually
 
 ## Contributing
 
@@ -619,13 +657,13 @@ Currently, the project does not have automated tests. Manual testing can be perf
 The following table summarizes the engine's output across the tracked universe, integrating ML-predicted sensitivity with quantitative downside modeling.
 
 | Ticker | Predicted Beta | 95% VaR (MC) | Risk Category | Key Insight |
-|:-------|:---------------|:-------------|:--------------|:------------|
-| **NVDA** | 1.84           | 3.12%        | 🔵 Efficient  | High market capture with resilient downside floors. |
-| **TSLA** | 1.62           | 2.85%        | 🔵 Efficient  | Momentum-backed sensitivity with controlled tail-risk. |
-| **PG** | 0.45           | 4.10%        | 🟡 Outlier    | Low market correlation but high idiosyncratic crash risk. |
-| **XOM** | 0.62           | 3.95%        | 🟡 Outlier    | Energy sector volatility creating non-linear tail risk. |
-| **CVX** | 0.58           | 1.80%        | 🟢 Defensive  | Optimal "Safe Haven" with low Beta and low VaR. |
-| **^GSPC**| 1.00           | 1.50%        | ⚪ Benchmark  | Standard market baseline for risk comparison. |
+| :----------- | :--------------- | :------------- | :-------------- | :------------ |
+| **NVDA** | 1.84 | 3.12% | 🔵 Efficient | High market capture with resilient downside floors. |
+| **TSLA** | 1.62 | 2.85% | 🔵 Efficient | Momentum-backed sensitivity with controlled tail-risk. |
+| **PG** | 0.45 | 4.10% | 🟡 Outlier | Low market correlation but high idiosyncratic crash risk. |
+| **XOM** | 0.62 | 3.95% | 🟡 Outlier | Energy sector volatility creating non-linear tail risk. |
+| **CVX** | 0.58 | 1.80% | 🟢 Defensive | Optimal "Safe Haven" with low Beta and low VaR. |
+| **^GSPC** | 1.00 | 1.50% | ⚪ Benchmark | Standard market baseline for risk comparison. |
 
 ## License
 
@@ -634,12 +672,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Disclaimer
 
 This software is for educational and research purposes only. It should not be used for actual investment decisions without proper validation and professional financial advice. Past performance does not guarantee future results.
-
-
-
-
-
-
-
-
-
