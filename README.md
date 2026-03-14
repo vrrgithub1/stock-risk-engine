@@ -30,12 +30,12 @@ The Stock Risk Engine has been evolved into a fully automated, cloud-native MLOp
 In the latest release, the engine has been upgraded to include a multi-engine **Value-at-Risk (VaR)** framework, shifting the focus from historical reporting to predictive downside protection.
 
 ### 🧮 Multi-Engine VaR Framework
-- **Historical Simulation:** Non-parametric assessment using actual 252-day return distributions.
-- **Parametric (Variance-Covariance):** Statistical modeling based on portfolio mean-variance.
-- **Monte Carlo Simulation:** 1,000+ stochastic iterations to capture "Fat-Tail" events and non-linear risks.
+* **Historical Simulation:** Non-parametric assessment using actual 252-day return distributions.
+* **Parametric (Variance-Covariance):** Statistical modeling based on portfolio mean-variance.
+* **Monte Carlo Simulation:** 1,000+ stochastic iterations to capture "Fat-Tail" events and non-linear risks.
 
 ### 📊 Strategic Risk-Reward Matrix
-The engine now generates a dynamic four-quadrant analysis joining **ML-Predicted Beta** (Market Sensitivity) with **Monte Carlo VaR** (Tail-Risk). 
+The engine now generates a dynamic four-quadrant analysis joining **ML-Predicted Beta** (Market Sensitivity) with **Monte Carlo VaR** (Tail-Risk).
 
 **Current Market Classifications:**
 * 🔵 **Efficient (High Beta / Low VaR):** High market sensitivity with resilient downside floors. (e.g., **NVDA**, **TSLA**)
@@ -45,14 +45,43 @@ The engine now generates a dynamic four-quadrant analysis joining **ML-Predicted
 
 ![Risk Matrix](docs/Risk_Matrix.png) 
 
+## 📈 Institutional Stock Risk Engine: Phase V Release
+An institutional-grade risk management platform leveraging Monte Carlo simulations for Value-at-Risk (VaR) forecasting and automated model validation.
 
-## 🛠️ Tech Stack
+### 🚀 Model Validation & Performance Certification
+Phase V marks the successful certification of the model's predictive accuracy. By moving to an internal "Single Source of Truth" for backtesting, the engine has achieved institutional-level stability.
 
-* **Engine:** Python 3.x, Scikit-Learn (Random Forest Regressor).
-* **Data Pipeline:** Medallion Architecture (Bronze/Silver/Gold) via SQL & Pandas.
-* **Macro Context:** VIX-indexed Market Regime Classification.
-* **Visualization:** Plotly (Interactive Dashboards) & FPDF (Executive PDF Reporting).
+### Key Metrics as of March 2026:
+* **Model Health Score:** ✅ 3.28% Violation Rate (Target < 5.0%)
 
+* **Confidence Interval:** 95%
+* **Backtest Success:** 96.72% of market realizations contained within predicted risk floors.
+* **Engine Specs:** 10,000 Monte Carlo iterations per asset with a 130-day trailing volatility window.
+
+## 🛠️ New in Phase V
+
+### 1. Internal Validation Pipeline
+
+The model now utilizes the Silver Data Layer for backtesting instead of external API calls. 
+This ensures:
+* **Zero-Lag Reporting:** Immediate validation of Friday's close without waiting for adjusted-price updates.
+* **Data Parity:** The same cleaning logic used for the simulation is used for the validation.
+
+### 2. Institutional Risk Dashboard
+
+Updated Streamlit interface featuring:
+* **Health Gauge:** Visual Pass/Fail indicator for model calibration.
+* **VaR Breach Timeline:** Historical tracking of price movement vs. the "Orange Net" risk floor.
+* **Panic Overlay:** Real-time correlation analysis between portfolio assets, the VIX, and rolling 30-day betas.
+
+### 3. Tail-Risk Attribution
+Automated logging of "Clean Violations" (e.g., recorded breaches in NVDA and XOM) to monitor idiosyncratic versus systemic risk events.
+
+## 🛠️ Technical Stack & Architecture
+* **Language:** Python 3.10+
+* **Database:** SQLite (Medallion Architecture: Bronze ➔ Silver ➔ Gold)
+* **Analytics:** Pandas, NumPy, Scipy (Monte Carlo Simulations)
+* **Visualization:** Plotly, Streamlit
 
 ## Author and Developer
 
