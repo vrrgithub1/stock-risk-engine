@@ -657,7 +657,7 @@ Currently, the project does not have automated tests. Manual testing can be perf
 The following table summarizes the engine's output across the tracked universe, integrating ML-predicted sensitivity with quantitative downside modeling.
 
 | Ticker | Predicted Beta | 95% VaR (MC) | Risk Category | Key Insight |
-| :----------- | :--------------- | :------------- | :-------------- | :------------ |
+| :----------- | :--------------- | :------------------- | :----------------------- | :------------ |
 | **NVDA** | 1.84 | 3.12% | 🔵 Efficient | High market capture with resilient downside floors. |
 | **TSLA** | 1.62 | 2.85% | 🔵 Efficient | Momentum-backed sensitivity with controlled tail-risk. |
 | **PG** | 0.45 | 4.10% | 🟡 Outlier | Low market correlation but high idiosyncratic crash risk. |
