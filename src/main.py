@@ -50,6 +50,7 @@ def main():
     if docker_mode:
         logger.info("Initializing database schema in Docker mode...")
         create_medallion_schema(initial_setup=True)
+        tickers = get_universe_tickers_from_config()
     else:
         logger.info("Initializing database schema in Local mode...")
         create_medallion_schema(initial_setup=False)
