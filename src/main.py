@@ -15,7 +15,7 @@ from src.services.database import (
 )
 from src.services.maintenance import archive_old_data
 from src.utils.config import DATABASE_PATH, REPORT_DIR
-from src.services.reporting import ReportGenerator
+from src.services.reporting import ReportGenerator, SectorEnricher
 
 import sys
 import os
@@ -53,6 +53,17 @@ def main():
     else:
         logger.info("Initializing database schema in Local mode...")
         create_medallion_schema(initial_setup=False)
+
+        tickers = get_universe_tickers_from_config()  # Access the tickers list stored during ingestion
+        logger.info(f"Updating Sector and Industry metadata for tickers: {tickers}")
+
+    # Initialize the SectorEnricher and update metadata for each ticker
+    enricher = SectorEnricher()
+    for ticker in tickers:
+        if ticker.startswith("^"):  # Skip indices for individual stock reports
+            continue
+        else:
+            enricher.get_metadata(ticker)
     
     # 2. Ingest Raw Data (Sourcing from tickers.yml inside the module)
     ingestor = DataIngestor()
@@ -73,7 +84,7 @@ def main():
     # 7. Cleanup & Archive
     archive_old_data()
 
-    print("--- Pipeline Complete ---")
+    logger.info("--- Pipeline Complete ---")
 
     # 8. Generate Visual Reports
     repgen = ReportGenerator()
@@ -96,6 +107,11 @@ def main():
     repgen.plot_beta_drift_forecast_report()
     repgen.plot_risk_performance_report()
     repgen.plot_risk_summary_matrix()
+    sector_summary = repgen.get_sector_summary()
+    logger.info(f"Sector Summary: {sector_summary}")
+
+    repgen.backfill_phase_iv_backtests()
+
     logger.info("All reports generated and saved to disk.")
 
 if __name__ == "__main__":

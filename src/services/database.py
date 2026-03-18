@@ -193,10 +193,47 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
             parametric_var FLOAT,
             monte_carlo_var FLOAT,
             display_text TEXT,
+            forecast_date DATE,
             PRIMARY KEY (ticker, timestamp)
         )
     """)
     logger.info("Gold layer table 'gold_risk_var_summary' created successfully.")
+
+    ########  Phase V: Adding new columns sector and industry to gold_risk_inference and gold_risk_metrics tables ########
+
+    logger.info("Creating ticker_ref table...")
+    if initial_setup:
+        cursor.execute("""
+            DROP TABLE IF EXISTS ticker_ref
+        """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ticker_ref (
+            ticker VARCHAR(10) PRIMARY KEY,
+            sector VARCHAR(100),
+            industry VARCHAR(100),
+            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    logger.info("Successfully created ticker_ref table.")
+
+    logger.info("Creating gold_risk_backtesting table...")
+    if initial_setup:
+        cursor.execute("""
+            DROP TABLE IF EXISTS gold_risk_backtesting
+        """)    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS gold_risk_backtesting (
+            ticker VARCHAR(10),
+            forecast_date DATE,
+            predicted_var_95 FLOAT,
+            actual_return FLOAT,
+            is_violation BOOLEAN,
+            PRIMARY KEY (ticker, forecast_date)
+        )
+    """)
+    logger.info("Successfully created gold_risk_backtesting table.")
+        
 
     conn.commit()
     conn.close()
