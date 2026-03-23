@@ -1,0 +1,17 @@
+# stress_config.yml
+historical_events:
+  - name: "COVID_2020_CRASH"
+    start: "2020-02-20"
+    end: "2020-04-30"
+    label: "Global Liquidity Crunch"
+  - name: "GFC_LEHMAN_2008"
+    start: "2008-09-01"
+    end: "2008-12-31"
+    label: "Systemic Banking Crisis"
+  - name: "TECH_BUBBLE_2000"
+    start: "2000-03-01"
+    end: "2002-09-01"
+    label: "Dot-Com Secular Decline"
+
+market_proxy: "^GSPC" # Used to calculate correlation_to_market during stress
+  

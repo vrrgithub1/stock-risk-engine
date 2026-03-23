@@ -13,8 +13,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 import yaml
-from src.utils.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR
+from src.utils.config import DATABASE_PATH, TICKERS_YAML_PATH, REPORT_DIR, SQL_DIR, STRESS_CONFIG_PATH
 from src.core.var_engine import VarEngine
+from src.core.stress_engine import calculate_stress_metrics, run_phase_vi_stress_test
+
 
 def safe_sqrt(x):
     if x is None or x < 0:
@@ -41,6 +43,7 @@ DATABASE_PATH = DATABASE_PATH
 ANALYTICS_LAYER_SQL_PATH = SQL_DIR / "init_analytics_layer.sql"
 TICKERS_YAML_PATH = TICKERS_YAML_PATH
 REPORT_DIR = REPORT_DIR
+STRESS_CONFIG_PATH = STRESS_CONFIG_PATH
 
 
 def get_universe_tickers_from_config(config_path=TICKERS_YAML_PATH):
@@ -234,6 +237,24 @@ def create_medallion_schema(db_path=DATABASE_PATH, initial_setup=False):
     """)
     logger.info("Successfully created gold_risk_backtesting table.")
         
+
+    logger.info("Creating gold_stress_scenarios table...")
+    if initial_setup:
+        cursor.execute("""
+            DROP TABLE IF EXISTS gold_stress_scenarios
+        """)    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS gold_stress_scenarios (
+            scenario_name VARCHAR(100) NOT NULL,
+            ticker VARCHAR(10) NOT NULL,
+            run_date DATE NOT NULL,
+            historical_max_drawdown FLOAT,
+            simulated_stress_var FLOAT,
+            correlation_to_market FLOAT,
+            PRIMARY KEY (scenario_name, ticker, run_date)
+        )
+    """)
+    logger.info("Successfully created gold_stress_scenarios table.")
 
     conn.commit()
     conn.close()
@@ -490,6 +511,13 @@ def update_risk_inference(db_path=DATABASE_PATH):
     conn.commit()
     conn.close()
     logger.info(f"Risk inference updated successfully in database at: {db_path}")   
+
+def update_stress_scenarios(db_path=DATABASE_PATH, config_path=STRESS_CONFIG_PATH):
+    """
+    Runs the Phase V Stress Test and updates the gold_stress_scenarios table.
+    """
+    logger.info(f"Running Phase V Stress Test and updating gold_stress_scenarios in database at: {db_path} using config at: {config_path}")
+    run_phase_vi_stress_test(db_path, config_path)
 
 if __name__ == "__main__":
     create_medallion_schema(initial_setup=False)

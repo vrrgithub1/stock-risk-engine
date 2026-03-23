@@ -3,6 +3,8 @@
 This document tracks the iterative development of the Stock Risk Engine, from initial data ingestion to institutional-grade model validation.
 
 ---
+### **Phase VI: Macro Stress Testing - Work in Progress**
+
 
 ### **Phase V: Model Validation & Governance**
 * **Goal:** Certify model accuracy.

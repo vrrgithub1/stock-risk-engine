@@ -11,7 +11,8 @@ from src.services.database import (
     update_silver_risk_features, 
     update_risk_metrics, 
     get_universe_tickers_from_config, 
-    get_spotlight_tickers_from_config
+    get_spotlight_tickers_from_config,
+    update_stress_scenarios
 )
 from src.services.maintenance import archive_old_data
 from src.utils.config import DATABASE_PATH, REPORT_DIR
@@ -114,6 +115,10 @@ def main():
     repgen.backfill_phase_iv_backtests()
 
     logger.info("All reports generated and saved to disk.")
+
+    logger.info("Running Phase V Stress Test and updating gold_stress_scenarios...")
+    update_stress_scenarios()
+    logger.info("Phase V Stress Test completed and database updated.")
 
 if __name__ == "__main__":
     main()

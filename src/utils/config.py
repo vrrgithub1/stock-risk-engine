@@ -17,6 +17,7 @@ DATABASE_PATH = DATA_DIR / "stock_risk_vault.db"
 # YAML Config Path
 CONFIG_DIR = BASE_DIR / "config"
 TICKERS_YAML_PATH = CONFIG_DIR / "tickers.yml"
+STRESS_CONFIG_PATH = CONFIG_DIR / "stress_config.yml"
 
 # Report Paths (Used by your Plotly logic)
 REPORT_DIR = BASE_DIR / "reports"
