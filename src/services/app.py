@@ -5,47 +5,69 @@ import pandas as pd
 import sqlite3
 from src.utils.config import DATABASE_PATH
 
-def render_what_if_analysis(df_stress, selected_scenario, shock, multiplier):
+def render_what_if_analysis(db_path, selected_scenario, shock, multiplier):
     st.subheader("🧪 'What-If' Hypothetical Impact")
-    st.markdown(f"Estimating portfolio impact if the market drops **{shock}%** with a **{multiplier}x** volatility spike.")
+    st.markdown(f"### 🔮 Predictive Simulation: {selected_scenario.replace('_', ' ')}")
+    st.info(f"**Scenario Logic:** Applying **{selected_scenario}** correlations to a **{shock}%** market drop.")
+
+    conn = sqlite3.connect(db_path)
+    
+    # 1. Fetch Stress Data
+    df_stress = pd.read_sql("""
+        SELECT * 
+        FROM gold_stress_scenarios
+        WHERE run_date = (SELECT MAX(run_date) FROM gold_stress_scenarios)
+    """, conn)
+    
+    conn.close()
 
     # Filter for the selected historical regime to get relevant correlations
-    active_correlations = df_stress[df_stress['scenario_name'] == selected_scenario].copy()
+# 1. Filter and CLEAN the data first
+    # This removes tickers that don't have correlation data for the selected period (e.g., TSLA in 2008)
+    active_data = df_stress[
+        (df_stress['scenario_name'] == selected_scenario) & 
+        (df_stress['correlation_to_market'].notna())
+    ].copy()
+
+    if active_data.empty:
+        st.warning(f"No correlation data available for the {selected_scenario} period.")
+        return
+
+    # 2. Calculate Projected Loss
+    active_data['projected_loss'] = (shock / 100) * active_data['correlation_to_market'] * multiplier
     
-    # Calculate Projected Loss
-    # Impact = Market Shock * Correlation * Volatility Multiplier
-    active_correlations['projected_loss'] = (shock / 100) * active_correlations['correlation_to_market'] * multiplier
+    # 3. Create columns ONLY for the valid rows we have
+    num_assets = len(active_data)
+    cols = st.columns(num_assets)
     
-    # Visualization: Impact Table
-    impact_df = active_correlations[['ticker', 'correlation_to_market', 'projected_loss']]
-    
-    cols = st.columns(len(impact_df))
-    for i, row in impact_df.iterrows():
-        cols[i].metric(
-            label=f"{row['ticker']} Impact", 
-            value=f"{row['projected_loss']:.2%}",
-            delta=f"Corr: {row['correlation_to_market']:.2f}",
-            delta_color="inverse"
-        )
-    
+    # 4. Use .reset_index() to ensure 'i' always matches the column index correctly
+    for i, row in active_data.reset_index(drop=True).iterrows():
+        with cols[i]:
+            st.metric(
+                label=f"{row['ticker']} Impact", 
+                value=f"{row['projected_loss']:.2%}",
+                delta=f"Corr: {row['correlation_to_market']:.2f}",
+                delta_color="inverse"
+            )
+
     # Bar Chart for Impact
     fig = go.Figure(go.Bar(
-        x=impact_df['ticker'],
-        y=impact_df['projected_loss'],
+        x=active_data['ticker'],
+        y=active_data['projected_loss'],
         marker_color='orange',
-        text=[f"{x:.1%}" for x in impact_df['projected_loss']],
+        text=[f"{x:.1%}" for x in active_data['projected_loss']],
         textposition='auto',
     ))
     fig.update_layout(
         title="Projected Asset Devaluation",
         yaxis_title="Estimated Return (%)",
         template="plotly_dark",
-        yaxis=dict(range=[min(impact_df['projected_loss'])*1.2, 0])
+        yaxis=dict(range=[min(active_data['projected_loss'])*1.2, 0])
     )
     st.plotly_chart(fig, use_container_width=True)
 
 
-def render_stress_tab(db_path):
+def render_stress_tab(db_path, selected_scenario):
     st.header("📊 Phase VI: Macro Stress Scenarios")
     st.subheader("📜 Historical Regime Analysis")
     st.info("Showing actual performance during selected historical crash.")    
@@ -71,8 +93,8 @@ def render_stress_tab(db_path):
     conn.close()
 
     # Scenario Selection
-    scenarios = df_stress['scenario_name'].unique()
-    selected_scenario = st.selectbox("Select Stress Scenario", scenarios)
+#    scenarios = df_stress['scenario_name'].unique()
+#    selected_scenario = st.selectbox("Select Stress Scenario", scenarios)
 
     # Filter data for selected scenario
     scenario_data = df_stress[df_stress['scenario_name'] == selected_scenario].merge(df_normal, on='ticker')
@@ -127,20 +149,89 @@ def render_stress_tab(db_path):
     st.plotly_chart(fig, use_container_width=True)
 
     st.info("💡 **Insight:** A larger 'Stress Gap' (the difference between bars) indicates an asset that is highly sensitive to market shocks despite appearing stable in normal conditions.")
-    
-    st.divider()
 
-    st.subheader("🔮 Predictive 'What-If' Simulation")
-    st.write("Adjust the sidebar sliders to simulate a custom shock based on historical correlations.")
-    render_what_if_analysis(df_stress, selected_scenario, market_shock, vol_multiplier)
+#    st.divider()
 
+#    st.subheader("🔮 Predictive 'What-If' Simulation")
+#    st.write("Adjust the sidebar sliders to simulate a custom shock based on historical correlations.")
+#    render_what_if_analysis(df_stress, selected_scenario, market_shock, vol_multiplier)
 
+def render_model_card():
+    st.header("⚖️ AI Governance: Model Card (v6.0.0)")
+    st.info("This documentation aligns with NIST AI RMF and ISO/IEC 42001 transparency standards.")
+
+    # --- SECTION 1: MODEL DETAILS ---
+    with st.expander("📝 1. Model Details & Intended Use", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("""
+            **Model Type:** Monte Carlo VaR Simulation  
+            **Version:** 6.0.0 (Phase VI Certified)  
+            **Primary Use:** Portfolio Downside Risk Estimation
+            """)
+        with col2:
+            st.markdown("""
+            **Developer:** Finance Professional (21+ yrs Exp)  
+            **Framework:** Python / SQL / Streamlit  
+            **Status:** Production-Ready / Validated
+            """)
+
+    # --- SECTION 2: DATA AUDIT ---
+    with st.expander("📂 2. Data Provenance & Integrity"):
+        st.markdown("""
+        - **Source:** Yahoo Finance API (Bronze Layer)
+        - **Pipeline:** Medallion Architecture (Bronze -> Silver -> Gold)
+        - **History:** 130-day trailing lookback with daily refresh.
+        - **Integrity Check:** Automated outlier detection and missing value imputation for ticker data.
+        """)
+
+    # --- SECTION 3: QUANTITATIVE VALIDATION ---
+    with st.expander("🎯 3. Model Health & Performance"):
+        # You can pull these dynamically if you have them in variables
+        st.markdown(f"""
+        - **Confidence Level:** 95%
+        - **Certification Metric:** Violation Rate < 5.0%
+        - **Current Performance:** ✅ **2.63%** (Based on Phase V Backtest)
+        - **Validation Method:** Daily realized return comparison vs. predicted floor.
+        """)
+
+    # --- SECTION 4: STRESS & LIMITATIONS ---
+    with st.expander("⚠️ 4. Risks, Limitations & Mitigations"):
+        st.warning("**Limitation:** Standard VaR assumes 'normal' market distributions and may underrepresent tail-risk.")
+        st.success("**Mitigation:** Integrated Phase VI Macro Stress scenarios (COVID, GFC, Tech Bubble) to provide a non-linear safety margin.")
+        st.markdown("""
+        - **Out of Scope:** High-frequency trading, illiquid 'Penny' stocks, and cryptocurrencies.
+        - **Human-in-the-Loop:** Requires qualitative review of 'What-If' scenarios for strategic capital allocation.
+        """)
+
+    st.caption("Last Governance Audit: March 2026")
 
 # Initialize your reporting service
 report_gen = ReportGenerator()
 
 st.set_page_config(page_title="Risk Command Center", layout="wide")
 
+# Sidebar - Global Filters
+st.sidebar.header("🌍 Market Regime Selection")
+
+
+conn = sqlite3.connect(DATABASE_PATH)
+
+# 1. Fetch Stress Data
+df_stress = pd.read_sql("""
+    SELECT * 
+    FROM gold_stress_scenarios
+    WHERE run_date = (SELECT MAX(run_date) FROM gold_stress_scenarios)
+""", conn)
+
+conn.close()
+
+scenarios = df_stress['scenario_name'].unique()
+selected_scenario = st.sidebar.selectbox("Select Historical Stress Event", scenarios)
+
+st.sidebar.divider()
+
+# Sidebar - Hypothetical Controls
 st.sidebar.header("🕹️ Hypothetical Shock Controls")
 market_shock = st.sidebar.slider("Market Crash Scenario (%)", min_value=-30, max_value=0, value=-10, step=-1)
 vol_multiplier = st.sidebar.slider("Volatility Multiplier", min_value=1.0, max_value=3.0, value=1.5, step=0.1)
@@ -157,9 +248,12 @@ total_forecasts = len(df)
 total_violations = df['is_violation'].sum()
 violation_rate = (total_violations / total_forecasts) * 100
 
-tab1, tab2, tab3 = st.tabs(["🛡️ Phase V: Model Health", "📉 Breach Timeline", "🔥 Phase VI: Macro Stress"])
+tab1, tab2, tab3, tab4 = st.tabs(["⚖️ Model Card", "🛡️ Phase V: Model Health", "📉 Breach Timeline", "🔥 Phase VI: Macro Stress"])
 
 with tab1:
+    render_model_card()
+
+with tab2:
     col1, col2 = st.columns([1, 2])
 
     with col1:
@@ -237,7 +331,7 @@ with tab1:
 
         st.plotly_chart(fig_timeline, use_container_width=True)
 
-with tab2:
+with tab3:
     # --- Extreme Event Tracker Section ---
     st.divider()
     st.subheader("🚨 Extreme Event Tracker (Exception Attribution)")
@@ -271,8 +365,11 @@ with tab2:
     else:
         st.success("No extreme breaches detected. Model tails are well-contained.")
 
-with tab3:
-    render_stress_tab(DATABASE_PATH)
-
-
+with tab4:
+    sub_tab1, sub_tab2 = st.tabs(["📜 Historical Audit", "🔮 Predictive Simulation"])
+    with sub_tab1:
+        render_stress_tab(DATABASE_PATH, selected_scenario)
+    with sub_tab2:
+        st.write("Adjust the sidebar sliders to simulate a custom shock based on historical correlations.")
+        render_what_if_analysis(DATABASE_PATH, selected_scenario, market_shock, vol_multiplier)
 
