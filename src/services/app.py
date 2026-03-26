@@ -3,12 +3,23 @@ import plotly.graph_objects as go
 from src.services.reporting import ReportGenerator # Import your generator
 import pandas as pd
 import sqlite3
-from src.utils.config import DATABASE_PATH
+from src.utils.config import (
+    DATABASE_PATH, 
+    get_benchmark_tickers_from_yaml,
+    get_index_tickers_from_yaml,
+    get_tickers_from_yaml
+)
 
 def render_what_if_analysis(db_path, selected_scenario, shock, multiplier):
     st.subheader("🧪 'What-If' Hypothetical Impact")
     st.markdown(f"### 🔮 Predictive Simulation: {selected_scenario.replace('_', ' ')}")
     st.info(f"**Scenario Logic:** Applying **{selected_scenario}** correlations to a **{shock}%** market drop.")
+
+    pf_tickers = get_tickers_from_yaml()
+    benchmark_tickers = get_benchmark_tickers_from_yaml()
+    index_tickers = get_index_tickers_from_yaml()
+    print( type(pf_tickers), type(benchmark_tickers), type(index_tickers)) # Debugging line to check types
+    print(f"DEBUG: Tickers from YAML - PF: {pf_tickers}, Benchmarks: {benchmark_tickers}, Indices: {index_tickers}")
 
     conn = sqlite3.connect(db_path)
     
@@ -24,9 +35,17 @@ def render_what_if_analysis(db_path, selected_scenario, shock, multiplier):
     # Filter for the selected historical regime to get relevant correlations
 # 1. Filter and CLEAN the data first
     # This removes tickers that don't have correlation data for the selected period (e.g., TSLA in 2008)
-    active_data = df_stress[
-        (df_stress['scenario_name'] == selected_scenario) & 
-        (df_stress['correlation_to_market'].notna())
+
+    allowed_tickers_list = pf_tickers + index_tickers
+    not_allowed_tickers_list = benchmark_tickers # Assuming you want to exclude benchmarks from the 'What-If' analysis
+    
+    filter_condition = df_stress['ticker'].isin(allowed_tickers_list) & ~df_stress['ticker'].isin(not_allowed_tickers_list)
+    df_filtered = df_stress[filter_condition]
+
+    active_data = df_filtered[
+        (df_filtered['scenario_name'] == selected_scenario) & 
+        (df_filtered['correlation_to_market'].notna()) &
+        (df_filtered['ticker'].isin(allowed_tickers_list))
     ].copy()
 
     if active_data.empty:
@@ -119,7 +138,13 @@ def render_stress_tab(db_path, selected_scenario):
         'simulated_stress_var': '{:.2%}',
         'stress_gap': '{:.2%}',
         'historical_max_drawdown': '{:.2%}'
-    }))
+    }), column_config={
+        'ticker': { "label": "Asset", "alignment": "left" },
+        'normal_var': { "label": "Normal VaR", "alignment": "right" },
+        'simulated_stress_var': { "label": "Stress VaR", "alignment": "right" },
+        'stress_gap': { "label": "Stress Gap", "alignment": "right" },
+        'historical_max_drawdown': { "label": "Historical Max Drawdown", "alignment": "right" }
+    }, hide_index=True, use_container_width=True)
 
     # --- Stress Gap Visualization ---
     fig = go.Figure()

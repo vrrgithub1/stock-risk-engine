@@ -3,6 +3,7 @@
 Configuration file for the Stock Risk Engine Database.
 """ 
 import os
+import yaml
 from pathlib import Path
 
 # Define the base directory of the application
@@ -34,3 +35,27 @@ os.makedirs(SQL_DIR, exist_ok=True)
 # Market Settings
 REGIME_THRESHOLD_STRESS = 20.0
 REGIME_THRESHOLD_QUIET = 12.0
+
+def get_tickers_from_yaml():
+    """
+    Load tickers from the tickers.yml configuration file.
+    """
+    with open(TICKERS_YAML_PATH, 'r') as file:
+        config = yaml.safe_load(file)
+    return config.get('equities', [])
+
+def get_benchmark_tickers_from_yaml():
+    """
+    Load benchmark tickers from the tickers.yml configuration file.
+    """
+    with open(TICKERS_YAML_PATH, 'r') as file:
+        config = yaml.safe_load(file)
+    return config.get('benchmarks', [])
+
+def get_index_tickers_from_yaml():
+    """
+    Load index tickers from the tickers.yml configuration file.
+    """
+    with open(TICKERS_YAML_PATH, 'r') as file:
+        config = yaml.safe_load(file)
+    return config.get('indicators', [])
