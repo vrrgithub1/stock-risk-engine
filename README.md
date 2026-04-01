@@ -35,7 +35,7 @@ graph LR
 Unlike standard retail dashboards, this system includes a built-in Governance Layer:
 
 - **Health Score:** Continuous backtesting of 95% Monte Carlo VaR.
-- **Current Status:** ✅ CERTIFIED (Violation Rate: 2.47% vs. 5% target).
+- **Current Status:** ✅ CERTIFIED (Violation Rate: 2.7% vs. 5% target).
 - **Transparency:** Automated Model Cards and AI Transparency Reports (See /docs).
 
 ## 🧪 Advanced Features: Phase VI

@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 from src.services.reporting import ReportGenerator # Import your generator
 import pandas as pd
 import sqlite3
+from datetime import datetime
 from src.utils.config import (
     DATABASE_PATH, 
     get_benchmark_tickers_from_yaml,
@@ -216,7 +217,7 @@ def render_model_card():
         st.markdown(f"""
         - **Confidence Level:** 95%
         - **Certification Metric:** Violation Rate < 5.0%
-        - **Current Performance:** ✅ **2.63%** (Based on Phase V Backtest)
+        - **Current Performance:** ✅ **2.7%** (Based on Phase V Backtest)
         - **Validation Method:** Daily realized return comparison vs. predicted floor.
         """)
 
@@ -266,7 +267,10 @@ df = report_gen.get_backtest_summary()
 print(df.head()) # Debugging line to check the structure of the DataFrame
 
 st.title("🛡️ Institutional Risk Command Center")
-st.markdown(f"**Data Status:** Monitoring {df['ticker'].nunique()} tickers across {df['sector'].nunique()} sectors.")
+today = datetime.now().strftime("%d-%b-%Y")
+#st.markdown(f"**As of:** {today}")
+
+st.markdown(f"**Data Status as of {today}:** Monitoring {df['ticker'].nunique()} tickers across {df['sector'].nunique()} sectors.")
 
 # 2. Logic for the Health Gauge
 total_forecasts = len(df)
